@@ -1,2 +1,5 @@
-# 2021-ICFP-contest
-The Free Tacos 2021 ICFP contest entry
+# Free Tacos - ICFP Contest 2021
+
+## Manifesto
+
+Set the tacos free!
