@@ -13,6 +13,18 @@
 				padding: 3px;
 				color: #fff;
 			}
+			.row {
+				display: flex;
+				flex-direction: row;
+				flex-wrap: wrap;
+				width: 100%;
+			}
+			.column {
+				display: flex;
+				flex-direction: column;
+				flex-basis: 100%;
+				flex: 1;
+			}
 		</style>
 	</head>
 	<body>
@@ -39,46 +51,71 @@
 			<button id="reset" onclick="resetSolution(); redraw();">Reset Solution</button>
 		</div>
 
-		<div>
-			<svg id="vis" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0.0 0.0 100.0 100.0">
-				<path id="hole" d="M 45.0,80.0 L 35.0,95.0 L 5.0,95.0 L 35.0,50.0 L 5.0,5.0 L 35.0,5.0 L 95.0,95.0 L 65.0,95.0 L 55.0,80.0 Z M 0.0,0.0 L 100.0,0.0 L 100.0,100.0 L 0.0,100.0" style="fill:#00000066;fill-rule:evenodd;stroke:none;" />
-				<g id="figure" style="fill:none;stroke:#ff000044;stroke-linecap:round" transform="translate(0.0, 0.0)">
-					<path d="M 30.0,95.0 L 40.0,65.0" />
-					<path d="M 40.0,65.0 L 40.0,35.0" />
-					<path d="M 40.0,35.0 L 20.0,40.0" />
-					<path d="M 20.0,40.0 L 20.0,30.0" />
-					<path d="M 20.0,30.0 L 45.0,25.0" />
-					<path d="M 45.0,25.0 L 40.0,15.0" />
-					<path d="M 40.0,15.0 L 45.0,5.0" />
-					<path d="M 45.0,5.0 L 55.0,5.0" />
-					<path d="M 55.0,5.0 L 60.0,15.0" />
-					<path d="M 60.0,15.0 L 55.0,25.0" />
-					<path d="M 55.0,25.0 L 80.0,30.0" />
-					<path d="M 80.0,30.0 L 80.0,40.0" />
-					<path d="M 80.0,40.0 L 60.0,35.0" />
-					<path d="M 60.0,35.0 L 60.0,65.0" />
-					<path d="M 60.0,65.0 L 70.0,95.0" />
-					<path d="M 70.0,95.0 L 60.0,95.0" />
-					<path d="M 60.0,95.0 L 50.0,70.0" />
-					<path d="M 50.0,70.0 L 40.0,95.0" />
-					<path d="M 40.0,95.0 L 30.0,95.0" />
-					<path d="M 45.0,25.0 L 55.0,25.0" />
-					<path d="M 45.0,5.0 L 50.0,15.0" />
-					<path d="M 50.0,15.0 L 40.0,15.0" />
-					<path d="M 45.0,25.0 L 50.0,15.0" />
-					<path d="M 50.0,15.0 L 55.0,25.0" />
-					<path d="M 60.0,15.0 L 50.0,15.0" />
-					<path d="M 50.0,15.0 L 55.0,5.0" />
-					<path d="M 40.0,35.0 L 45.0,25.0" />
-					<path d="M 55.0,25.0 L 60.0,35.0" />
-					<path d="M 40.0,65.0 L 50.0,70.0" />
-					<path d="M 50.0,70.0 L 60.0,65.0" />
-				</g>
-				<g id="solution" style="fill:none;stroke:#00ff0088;stroke-linecap:round" transform="translate(0.0, 0.0)">
-					<path d="M 10.0,85.0 L 30.0,55.0" />
-					<path d="M 30.0,55.0 L 30.0,25.0" />
-				</g>
-			</svg>
+		<div class="row">
+			<div class="column">
+				<p>Epsilon: <span id="epsilon"></span></p>
+				<p>Max Ratio: <span id="max-ratio"></span></p>
+				<h2>Edges:</h2>
+				<table id="edges-table">
+					<thead>
+						<tr>
+							<th></th>
+							<th>X1</th>
+							<th>Y1</th>
+							<th>X2</th>
+							<th>Y2</th>
+							<th>Old Length²</th>
+							<th>New Length²</th>
+							<th>Ratio</th>
+						</tr>
+					</thead>
+					<tbody id="epsilon-table-body">
+
+					</tbody>
+				</table>
+				<ul id="epsilon"></ul>
+			</div>
+			<div class="column">
+				<svg id="vis" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0.0 0.0 100.0 100.0">
+					<path id="hole" d="M 45.0,80.0 L 35.0,95.0 L 5.0,95.0 L 35.0,50.0 L 5.0,5.0 L 35.0,5.0 L 95.0,95.0 L 65.0,95.0 L 55.0,80.0 Z M 0.0,0.0 L 100.0,0.0 L 100.0,100.0 L 0.0,100.0" style="fill:#00000066;fill-rule:evenodd;stroke:none;" />
+					<g id="figure" style="fill:none;stroke:#ff000044;stroke-linecap:round" transform="translate(0.0, 0.0)">
+						<path d="M 30.0,95.0 L 40.0,65.0" />
+						<path d="M 40.0,65.0 L 40.0,35.0" />
+						<path d="M 40.0,35.0 L 20.0,40.0" />
+						<path d="M 20.0,40.0 L 20.0,30.0" />
+						<path d="M 20.0,30.0 L 45.0,25.0" />
+						<path d="M 45.0,25.0 L 40.0,15.0" />
+						<path d="M 40.0,15.0 L 45.0,5.0" />
+						<path d="M 45.0,5.0 L 55.0,5.0" />
+						<path d="M 55.0,5.0 L 60.0,15.0" />
+						<path d="M 60.0,15.0 L 55.0,25.0" />
+						<path d="M 55.0,25.0 L 80.0,30.0" />
+						<path d="M 80.0,30.0 L 80.0,40.0" />
+						<path d="M 80.0,40.0 L 60.0,35.0" />
+						<path d="M 60.0,35.0 L 60.0,65.0" />
+						<path d="M 60.0,65.0 L 70.0,95.0" />
+						<path d="M 70.0,95.0 L 60.0,95.0" />
+						<path d="M 60.0,95.0 L 50.0,70.0" />
+						<path d="M 50.0,70.0 L 40.0,95.0" />
+						<path d="M 40.0,95.0 L 30.0,95.0" />
+						<path d="M 45.0,25.0 L 55.0,25.0" />
+						<path d="M 45.0,5.0 L 50.0,15.0" />
+						<path d="M 50.0,15.0 L 40.0,15.0" />
+						<path d="M 45.0,25.0 L 50.0,15.0" />
+						<path d="M 50.0,15.0 L 55.0,25.0" />
+						<path d="M 60.0,15.0 L 50.0,15.0" />
+						<path d="M 50.0,15.0 L 55.0,5.0" />
+						<path d="M 40.0,35.0 L 45.0,25.0" />
+						<path d="M 55.0,25.0 L 60.0,35.0" />
+						<path d="M 40.0,65.0 L 50.0,70.0" />
+						<path d="M 50.0,70.0 L 60.0,65.0" />
+					</g>
+					<g id="solution" style="fill:none;stroke:#00ff0088;stroke-linecap:round" transform="translate(0.0, 0.0)">
+						<path d="M 10.0,85.0 L 30.0,55.0" />
+						<path d="M 30.0,55.0 L 30.0,25.0" />
+					</g>
+				</svg>
+			</div>
 		</div>
 
 <script>
@@ -95,9 +132,6 @@
 	}
 
 	function setElementPaths(element, edges, vertices) {
-		let hole = '';
-		let op = 'M ';
-
 		while(element.firstChild) {
 			element.removeChild(element.firstChild);
 		}
@@ -158,6 +192,73 @@
 		document.getElementById('solution-data').value = JSON.stringify({"vertices":problemData.figure.vertices});
 	}
 
+	function squaredDistance(p, q) {
+		return ((p[0] - q[0]) ** 2) + ((p[1] - q[1]) ** 2)
+	}
+
+	function calculateRatio(oldEdge, newEdge) {
+		return Math.abs((squaredDistance(newEdge[0], newEdge[1]) / squaredDistance(oldEdge[0], oldEdge[1])) - 1);
+	}
+
+	function populateEpsilonTable(table, epsilon, edges, oldVertices, vertices) {
+		while(table.firstChild) {
+			table.removeChild(table.firstChild);
+		}
+
+		let i=0;
+		for(const edge of edges){
+			let p1 = vertices[edge[0]]
+			let p2 = vertices[edge[1]];
+			let oldP1 = oldVertices[edge[0]]
+			let oldP2 = oldVertices[edge[1]];
+			let newLength = squaredDistance(p1, p2);
+			let oldLength = squaredDistance(oldP1, oldP2);
+			let ratio = calculateRatio([oldP1, oldP2], [p1, p2]);
+
+			document.getElementById('epsilon').textContent = epsilon;
+			document.getElementById('max-ratio').textContent = epsilon/1000000;
+
+			let tr = document.createElement('tr');
+			let td = document.createElement('td');
+			td.textContent = i;
+			tr.appendChild(td);
+
+			td = document.createElement('td');
+			td.textContent = p1[0];
+			tr.appendChild(td);
+
+			td = document.createElement('td');
+			td.textContent = p1[1];
+			tr.appendChild(td);
+
+			td = document.createElement('td');
+			td.textContent = p2[0];
+			tr.appendChild(td);
+
+			td = document.createElement('td');
+			td.textContent = p2[1];
+			tr.appendChild(td);
+
+			td = document.createElement('td');
+			td.textContent = oldLength;
+			tr.appendChild(td);
+
+			td = document.createElement('td');
+			td.textContent = newLength;
+			tr.appendChild(td);
+
+			td = document.createElement('td');
+			td.textContent = ratio;
+			tr.appendChild(td);
+
+			//path.setAttribute('d', 'M ' + p1[0] + ',' + p1[1] + ' L ' + p2[0] + ',' + p2[1]);
+			//element.appendChild(path);
+			table.appendChild(tr);
+			i++;
+
+		}
+	}
+
 	function redraw() {
 		let svg = document.getElementById('vis');
 		let hole = document.getElementById('hole');
@@ -177,6 +278,7 @@
 			return;
 		}
 
+		populateEpsilonTable(document.getElementById('epsilon-table-body'), problemData.epsilon, problemData.figure.edges, problemData.figure.vertices, solutionData.vertices);
 	}
 
 	redraw();
