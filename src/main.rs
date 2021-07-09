@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Result;
 
 mod problem;
+mod solution;
 
 fn main() {
     let data = r#"{
