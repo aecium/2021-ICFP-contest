@@ -1,21 +1,23 @@
 use std::u128;
+use serde::{Deserialize, Serialize};
 
+#[derive(Deserialize, Debug)]
 pub struct Problem {
     hole: Vec<Point>,
     figure: Figure,
     epsilon: u128
 }
 
+#[derive(Deserialize, Debug)]
 pub struct Figure {
-    edges: Vec<usize>,
-    verticies: Vec<Point>
+    edges: Vec<Edge>,
+    vertices: Vec<Point>
 }
 
-pub struct Point {
-    x: u128,
-    y: u128, 
-}
+type Point = Vec<u128>;
+type Edge = Vec<usize>;
 
+#[derive(Serialize, Debug)]
 pub struct Solution {
-    verticies: Vec<Point>
+    vertices: Vec<Point>
 }
