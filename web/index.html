@@ -43,6 +43,9 @@
 		<div>
 			<label for="problem-data">Problem</label>
 			<textarea id="problem-data">{"hole":[[45,80],[35,95],[5,95],[35,50],[5,5],[35,5],[95,95],[65,95],[55,80]],"epsilon":150000,"figure":{"edges":[[2,5],[5,4],[4,1],[1,0],[0,8],[8,3],[3,7],[7,11],[11,13],[13,12],[12,18],[18,19],[19,14],[14,15],[15,17],[17,16],[16,10],[10,6],[6,2],[8,12],[7,9],[9,3],[8,9],[9,12],[13,9],[9,11],[4,8],[12,14],[5,10],[10,15]],"vertices":[[20,30],[20,40],[30,95],[40,15],[40,35],[40,65],[40,95],[45,5],[45,25],[50,15],[50,70],[55,5],[55,25],[60,15],[60,35],[60,65],[60,95],[70,95],[80,30],[80,40]]}}</textarea>
+
+			<label for="problem-file">Load Problem File</label>
+			<input type="file" id="problem-file" name="problem-file" onchange="loadProblemFile()" />
 		</div>
 
 		<div>
@@ -59,6 +62,12 @@
 		<div>
 			<button id="redraw" onclick="redraw()">Redraw</button>
 			<button id="reset" onclick="resetSolution(); redraw();">Reset Solution</button>
+
+			<label for="solution-file">Load Solution File</label>
+			<input type="file" id="solution-file" name="solution-file" onchange="loadSolutionFile()" />
+
+			<button id="solution-save" onclick="saveSolution()">Save 1-solution.json</button>
+			<a href="#save" id="solution-save-link" download="1-solution.json">_</a>
 		</div>
 
 		<div class="row">
@@ -315,6 +324,45 @@
 		}
 
 		populateEpsilonTable(document.getElementById('epsilon-table-body'), problemData.epsilon, problemData.figure.edges, problemData.figure.vertices, solutionData.vertices, problemData.hole);
+	}
+
+	function loadProblemFile(){
+		let file = document.getElementById('problem-file').files[0];
+		let reader = new FileReader();
+		let solutionName = file.name.replace('.json', '-solution.json');
+		document.getElementById('solution-save-link').setAttribute('download', solutionName);
+		document.getElementById('solution-save').textContent = 'Save ' + solutionName;
+		reader.onload = function(e) {
+			document.getElementById('problem-data').value = e.target.result;
+			redraw();
+		}
+		reader.readAsText(file);
+	}
+
+	function loadSolutionFile(){
+		let file = document.getElementById('solution-file').files[0];
+		console.log(file);
+
+		let reader = new FileReader();
+		reader.onload = function(e) {
+			document.getElementById('solution-data').value = e.target.result;
+			redraw();
+		}
+		reader.readAsText(file);
+	}
+
+	var saveFile = null;
+	function saveSolution(){
+		var data = new Blob([document.getElementById('solution-data').value], {type: 'text/json'});
+		if(saveFile !== null) {
+			window.URL.revokeObjectURL(saveFile);
+		}
+		saveFile = window.URL.createObjectURL(data);
+
+		var link = document.getElementById('solution-save-link');
+		link.href = saveFile;
+
+		link.dispatchEvent(new MouseEvent('click'));
 	}
 
 	redraw();
