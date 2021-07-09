@@ -1,5 +1,5 @@
 [package]
-name = "ICFP-2021"
+name = "icfp_2021"
 version = "0.1.0"
 edition = "2018"
 
