@@ -25,6 +25,16 @@
 				flex-basis: 100%;
 				flex: 1;
 			}
+			table, td, th {
+				width: auto;
+				text-align: left;
+			}
+			tr:hover {
+				background-color: #cdd;
+			} 
+			table.horizontal td {
+				width: 70%;
+			}
 		</style>
 	</head>
 	<body>
@@ -53,8 +63,13 @@
 
 		<div class="row">
 			<div class="column">
-				<p>Epsilon: <span id="epsilon"></span></p>
-				<p>Max Ratio: <span id="max-ratio"></span></p>
+				<table class="horizontal">
+					<tr><th>Epsilon:</th><td id="epsilon"></td></tr>
+					<tr><th>Max Ratio:</th><td id="max-ratio"></td></tr>
+					<tr><th>Possible Points:</th><td id="possible-points"></td></tr>
+					<tr><th>Dislikes:</th><td id="dislikes"></td></tr>
+				</table>
+
 				<h2>Edges:</h2>
 				<table id="edges-table">
 					<thead>
@@ -193,14 +208,33 @@
 	}
 
 	function squaredDistance(p, q) {
-		return ((p[0] - q[0]) ** 2) + ((p[1] - q[1]) ** 2)
+		return ((p[0] - q[0]) ** 2) + ((p[1] - q[1]) ** 2);
 	}
 
 	function calculateRatio(oldEdge, newEdge) {
 		return Math.abs((squaredDistance(newEdge[0], newEdge[1]) / squaredDistance(oldEdge[0], oldEdge[1])) - 1);
 	}
 
-	function populateEpsilonTable(table, epsilon, edges, oldVertices, vertices) {
+	function possiblePoints(numVertices, numEdges, numHoleVertices){
+		return Math.round(1000 * Math.log2(numVertices, numEdges, numHoleVertices));
+	}
+
+	function calculateDislikes(hole, vertices){
+		let dislikes = 0;
+		for(const hv of hole) {
+			let min = Number.MAX_SAFE_INTEGER;
+			for(const v of vertices) {
+				let d = squaredDistance(hv, v);
+				if(d < min){
+					min = d;
+				}
+			}
+			dislikes += min;
+		}
+		return Math.round(dislikes);
+	}
+
+	function populateEpsilonTable(table, epsilon, edges, oldVertices, vertices, hole) {
 		while(table.firstChild) {
 			table.removeChild(table.firstChild);
 		}
@@ -217,6 +251,8 @@
 
 			document.getElementById('epsilon').textContent = epsilon;
 			document.getElementById('max-ratio').textContent = epsilon/1000000;
+			document.getElementById('possible-points').textContent = possiblePoints(vertices.length, edges.length, hole.length);
+			document.getElementById('dislikes').textContent = calculateDislikes(hole, vertices);
 
 			let tr = document.createElement('tr');
 			let td = document.createElement('td');
@@ -248,7 +284,7 @@
 			tr.appendChild(td);
 
 			td = document.createElement('td');
-			td.textContent = ratio;
+			td.textContent = ratio.toFixed(5);
 			tr.appendChild(td);
 
 			//path.setAttribute('d', 'M ' + p1[0] + ',' + p1[1] + ' L ' + p2[0] + ',' + p2[1]);
@@ -278,7 +314,7 @@
 			return;
 		}
 
-		populateEpsilonTable(document.getElementById('epsilon-table-body'), problemData.epsilon, problemData.figure.edges, problemData.figure.vertices, solutionData.vertices);
+		populateEpsilonTable(document.getElementById('epsilon-table-body'), problemData.epsilon, problemData.figure.edges, problemData.figure.vertices, solutionData.vertices, problemData.hole);
 	}
 
 	redraw();
