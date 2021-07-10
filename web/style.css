@@ -1,0 +1,50 @@
+body { font-family: monospace; }
+textarea { width: 100%; }
+.error li {
+	background-color: #a00;
+	border: 1px solid #900;
+	border-radius: 3px;
+	padding: 3px;
+	color: #fff;
+}
+.row {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	width: 100%;
+}
+.column {
+	display: flex;
+	flex-direction: column;
+	flex-basis: 100%;
+	flex: 1;
+}
+#edges-wrapper {
+	max-height: 35vw;
+	overflow: scroll;
+}
+table, td, th {
+	width: auto;
+	text-align: left;
+}
+.point-error td {
+	background-color: #dcc;
+}
+td.ratio-error {
+	color: #d00;
+	font-weight: bold;
+}
+td.fail {
+	color: #d00;
+	font-weight: bold;
+}
+td.success {
+	color: #0d0;
+	font-weight: bold;
+}
+tr:hover {
+	background-color: #cdd;
+} 
+.number-input {
+	width: 3em;
+}
