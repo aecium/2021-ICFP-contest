@@ -1,6 +1,6 @@
 use problem::Problem;
-use serde::{Deserialize, Serialize};
-use serde_json::Result;
+
+use solution::Solution;
 
 mod problem;
 mod solution;
@@ -16,6 +16,15 @@ fn main() {
     }"#;
 
     let p: Problem = serde_json::from_str(data).unwrap();
-
-    dbg!(p);
+    let s: Solution = Solution {
+        vertices: vec![
+            vec![21, 28],vec![31, 28],vec![31, 87],vec![29, 41],vec![44, 43],vec![58, 70],
+            vec![38, 79],vec![32, 31],vec![36, 50],vec![39, 40],vec![66, 77],vec![42, 29],
+            vec![46, 49],vec![49, 38],vec![39, 57],vec![69, 66],vec![41, 70],vec![39, 60],
+            vec![42, 25],vec![40, 35]
+        ]
+    };
+    dbg!(&p);
+    dbg!(&s);
+    dbg!(&s.check(&p));
 }

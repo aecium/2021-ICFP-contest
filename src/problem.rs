@@ -1,5 +1,5 @@
 use std::u128;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
 pub struct Problem {
