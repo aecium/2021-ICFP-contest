@@ -96,6 +96,7 @@
 			<div class="column">
 				<table class="horizontal">
 					<tr><th>Vertex Status:</th><td id="vertex-status"></td></tr>
+					<tr><th>Cross Status:</th><td id="cross-status"></td></tr>
 					<tr><th>Epsilon Status:</th><td id="epsilon-status"></td></tr>
 					<tr><th>Epsilon:</th><td id="epsilon"></td></tr>
 					<tr><th>Max Ratio:</th><td id="max-ratio"></td></tr>
@@ -110,6 +111,7 @@
 							<tr>
 								<th></th>
 								<th>In</th>
+								<th>∅</th>
 								<th>X1</th>
 								<th>Y1</th>
 								<th>X2</th>
@@ -256,6 +258,27 @@
 		return Math.round(dislikes);
 	}
 
+	function linesCross(line1, line2) {
+		let width1 = line1[1][0] - line1[0][0];
+		let height1 = line1[1][1] - line1[0][1];
+		let width2 = line2[1][0] - line2[0][0];
+		let height2 = line2[1][1] - line2[0][1];
+		let s = (-height1 * (line1[0][0] - line2[0][0]) + width1 * (line1[0][1] - line2[0][1])) / (-width2 * height1 + width1 * height2);
+		let t = ( width2 * (line1[0][1] - line2[0][1]) - height2 * (line1[0][0] - line2[0][0])) / (-width2 * height1 + width1 * height2);
+		return s > 0 && s < 1 && t > 0 && t < 1;
+	}
+
+	function lineCrossesBounds(line, bounds){
+		let j = bounds.length - 1;
+		for (var i = 0; i < bounds.length; i++) {
+			if(linesCross(line, [bounds[j],bounds[i]])){
+				return true;
+			}
+			j = i;
+		}
+		return false;
+	}
+
 	function pointInside(point, vertices) {
 		let x = point[0];
 		let y = point[1];
@@ -269,6 +292,11 @@
 			let xj = vertices[j][0];
 			let yj = vertices[j][1];
 			
+			// On a point is inside
+			if(x==xi && y==yi){
+				return true;
+			}
+
 			if(((yi > y) != (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)){
 				crossings += 1;
 			}
@@ -328,6 +356,7 @@
 	function populateEpsilonTable(table, epsilon, edges, oldVertices, vertices, hole) {
 		let maxRatio = epsilon/1000000;
 		let vertexStatus = true;
+		let crossStatus = true;
 		let epsilonStatus = true;
 
 		while(table.firstChild) {
@@ -354,11 +383,15 @@
 			let oldLength = squaredDistance(oldP1, oldP2);
 			let ratio = calculateRatio([oldP1, oldP2], [p1, p2]);
 			let isInside = pointInside(p1, hole) && pointInside(p2, hole);
+			let isCrossBounds = lineCrossesBounds([p1, p2], hole);
 
 			let tr = document.createElement('tr');
-			if(!isInside || ratio > maxRatio){
+			if(!isInside || isCrossBounds || ratio > maxRatio){
 				if(!isInside){
 					vertexStatus = false;
+				}
+				if(isCrossBounds){
+					crossStatus = false;
 				}
 				if(ratio > maxRatio){
 					epsilonStatus = false;
@@ -376,6 +409,11 @@
 
 			td = document.createElement('td');
 			td.textContent = isInside ? '🟢' : '❌';
+			tr.appendChild(td);
+			tr.add
+
+			td = document.createElement('td');
+			td.textContent = isCrossBounds ? '❌' : '🟢';
 			tr.appendChild(td);
 			tr.add
 
@@ -415,19 +453,14 @@
 			i++;
 		}
 
-		let el = document.getElementById('vertex-status');
-		if(vertexStatus){
-			el.textContent = 'PASS';
-			el.classList.remove('fail');
-			el.classList.add('success');
-		} else {
-			el.textContent = 'FAIL';
-			el.classList.remove('success');
-			el.classList.add('fail');
-		}
+		updateStatusCell('vertex-status', vertexStatus);
+		updateStatusCell('cross-status', crossStatus);
+		updateStatusCell('epsilon-status', epsilonStatus);
+	}
 
-		el = document.getElementById('epsilon-status');
-		if(epsilonStatus){
+	function updateStatusCell(id, status){
+		let el = document.getElementById(id);
+		if(status){
 			el.textContent = 'PASS';
 			el.classList.remove('fail');
 			el.classList.add('success');
@@ -462,22 +495,28 @@
 		let solution = document.getElementById('solution');
 		problemData = JSON.parse(document.getElementById('problem-data').value);
 
-		let bounds = getBounds(problemData.hole);
-		let x1 = bounds[0][0]-5;
-		let y1 = bounds[0][1]-5;
-		let x2 = bounds[1][0]+10;
-		let y2 = bounds[1][1]+10;
-		svg.setAttributeNS(null, 'viewBox', '' + x1 + ' ' + y1 + ' ' + x2 + ' ' + y2);
-
-		hole.setAttribute('d', pathToHole(problemData.hole));
-		setElementPaths(figure, problemData.figure.edges, problemData.figure.vertices);
-
 		try {
 			solutionData = parseSolutionData(problemData, document.getElementById('solution-data').value);
 			setElementPaths(solution, problemData.figure.edges, solutionData.vertices);
 		} catch(error) {
 			return;
 		}
+
+		// concat(problemData.figure.vertices)
+		// concat(solutionData.vertices)
+		let points = problemData.hole.slice();
+		points = points.concat(problemData.figure.vertices);
+		points = points.concat(solutionData.vertices);
+		console.log("XXX: ", points, problemData.figure.vertices, solutionData.vertices);
+		let bounds = getBounds(points);
+		let x1 = bounds[0][0]-5;
+		let y1 = bounds[0][1]-5;
+		let x2 = (-x1) + bounds[1][0]+10;
+		let y2 = (-y1) + bounds[1][1]+10;
+		svg.setAttributeNS(null, 'viewBox', '' + x1 + ' ' + y1 + ' ' + x2 + ' ' + y2);
+
+		hole.setAttribute('d', pathToHole(problemData.hole));
+		setElementPaths(figure, problemData.figure.edges, problemData.figure.vertices);
 
 		populateEpsilonTable(document.getElementById('epsilon-table-body'), problemData.epsilon, problemData.figure.edges, problemData.figure.vertices, solutionData.vertices, problemData.hole);
 	}
