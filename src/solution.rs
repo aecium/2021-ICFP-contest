@@ -1,17 +1,22 @@
-use serde::Serialize;
+use std::usize;
+
+use serde::{Serialize, Deserialize};
 use crate::{problem::{Problem, Point}, solution::checker_utils::{RotationDirection, determine_rotation, is_point_on_shape}};
+
+use self::checker_utils::{cross_product, vector_from_points};
 
 mod checker_utils;
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Solution {
     pub vertices: Vec<Point>
 }
-#[derive(Debug)]
+#[derive(Serialize, Debug)]
 pub struct CheckResult {
     is_valid: bool,
     invalid_vertices: Vec<usize>,
-    invalid_edges_stretched: Vec<usize>
+    invalid_edges_stretched: Vec<usize>,
+    invalid_edges_intersecting: Vec<usize>
 }
 impl CheckResult {
     pub fn is_valid(&self) -> bool {
@@ -24,7 +29,8 @@ impl Solution {
         let mut result = CheckResult {
             is_valid: true,
             invalid_vertices: Vec::new(),
-            invalid_edges_stretched: Vec::new()
+            invalid_edges_stretched: Vec::new(),
+            invalid_edges_intersecting: Vec::new()
         };
         //first, are all the vertices inside or on the shape.
         let rotation_direction = determine_rotation(&problem.hole);
@@ -50,12 +56,28 @@ impl Solution {
                 result.invalid_edges_stretched.push(i);
             }
         }
-        //TODO third, do any lines intersect with the hole boundaries
+        //third, do any lines intersect with the hole boundaries
+        for edge_index in 0..problem.figure.edges.len() {
+            for hole_edge in 0..problem.hole.len() {
+                let solution_edge = &problem.figure.edges[edge_index];
+                let ps1 = (self.vertices[solution_edge[0]][0],self.vertices[solution_edge[0]][1]);
+                let ps2 = (self.vertices[solution_edge[1]][0],self.vertices[solution_edge[1]][1]);
+                let pe1= (problem.hole[hole_edge][0], problem.hole[hole_edge][1]);
+                let pe2 = (problem.hole[((hole_edge+1)%problem.hole.len())][0], problem.hole[((hole_edge+1)%problem.hole.len())][1]);
+                let d1 = cross_product(vector_from_points(pe1, ps1), vector_from_points(pe1, pe2));
+                let d2 = cross_product(vector_from_points(pe1, ps2), vector_from_points(pe1, pe2));
+                let d3 = cross_product(vector_from_points(ps1, pe1), vector_from_points(ps1, ps2));
+                let d4 = cross_product(vector_from_points(ps1, pe2), vector_from_points(ps1, ps2));
+                if ((d1<0 && d2>0)||(d1>0 && d2<0)) && ((d3>0 && d4<0) || (d3<0 && d4>0)) {
+                    result.is_valid = false;
+                    result.invalid_edges_intersecting.push(edge_index);
+                }
+            }
+        }
         result
     }
 
     fn is_point_inside_shape(p: &Vec<i128>, shape: &Vec<Vec<i128>>, rotation_direction: RotationDirection) -> bool{
-        dbg!(&p);
         //if p is on the border, it's inside, no need to continue further
         if is_point_on_shape(&p,shape) {
             return true;
@@ -76,12 +98,8 @@ impl Solution {
                 //horizontal lines aren't helpful, they only matter if the point is on the line, which is already checked
                 continue;
             }
-            dbg!(p1);
-            dbg!(p2);
-            dbg!(m);
             // interesting line
             if (p1.1 <= y && p2.1 >= y) || (p1.1 >= y && p2.1 <= y) {
-                dbg!("This line segment crosses the y");
                 //find the x value of the intersection with this line and the horizontal ray from the point
                 let ray_x = (((y - p1.1) as f64)/(m as f64)) + p1.0 as f64;
                 if ray_x < x as f64{
@@ -93,13 +111,11 @@ impl Solution {
                                continue;
                            }
                         }
-                    dbg!("incrementing crossings");
                     crossings += 1;
                 }
             }
             else { continue; }
         }
-        
     return (crossings % 2) == 1;
     }
 }
@@ -260,5 +276,35 @@ mod tests {
             ]
         };
         assert!(s.check(&p).is_valid());
+    }
+    #[test]
+    pub fn test_intersect() {
+        let p = Problem{
+            hole: vec![
+                vec![0,0],
+                vec![4,0],
+                vec![4,4],
+                vec![0,4]
+            ],
+            figure: Figure{
+                edges: vec![
+                    vec![0,1]
+                ],
+                vertices: vec![
+                    vec![1,1],
+                    vec![3,3]
+                ]
+            },
+            epsilon: 20_000_000
+        };
+        let s1 = Solution {
+            vertices: vec![
+                vec![1,1],
+                vec![5,5],
+            ]
+        };
+        let result = s1.check(&p);
+        dbg!(&result);
+        assert!(!&result.is_valid());
     }
 }
