@@ -10,6 +10,9 @@ mod solution;
 mod opt;
 use opt::Opt;
 
+mod solvers;
+use solvers::Basic;
+
 fn main() {
     let matches = Opt::from_args();
     match &matches {
@@ -23,6 +26,12 @@ fn main() {
             let s : Solution = serde_json::from_str(&solution_text).unwrap();
             let result = s.check(&p);
             println!("{}", serde_json::to_string(&result).unwrap());
+        },
+        Opt::Solve {problem_file, solver} => {
+            let mut problem_text = String::new();
+            File::open(problem_file).unwrap().read_to_string(&mut problem_text).unwrap();
+            let p : Problem = serde_json::from_str(&problem_text).unwrap();
+
         }
     }
 }
