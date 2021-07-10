@@ -18,7 +18,6 @@ pub fn determine_rotation(polygon: &Vec<Point>) -> RotationDirection {
         RotationDirection::CounterClockwise
     }
 }
-//TODO Detect if point is on shape
 pub fn is_point_on_shape(p: &Point, shape: &Vec<Point>) -> bool {
     for i in 0..shape.len() {
         let p1= (shape[i][0], shape[i][1]);
