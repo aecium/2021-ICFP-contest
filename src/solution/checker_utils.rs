@@ -10,7 +10,7 @@ pub fn vector_from_points(p1:(i128,i128), p2:(i128,i128)) -> (i128,i128) {
     return (x,y);
 }
 pub fn cross_product(v1: (i128,i128), v2: (i128, i128)) -> i128 {
-    return (v1.0*v2.1) - (v1.1*v2.0)
+    return (v1.0*v2.1) - (v2.0*v1.1)
 }
 
 pub fn determine_rotation(polygon: &Vec<Point>) -> RotationDirection {

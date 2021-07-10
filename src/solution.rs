@@ -64,14 +64,14 @@ impl Solution {
                 let ps2 = (self.vertices[solution_edge[1]][0],self.vertices[solution_edge[1]][1]);
                 let pe1= (problem.hole[hole_edge][0], problem.hole[hole_edge][1]);
                 let pe2 = (problem.hole[((hole_edge+1)%problem.hole.len())][0], problem.hole[((hole_edge+1)%problem.hole.len())][1]);
-                let d1 = cross_product(vector_from_points(pe1, ps1), vector_from_points(ps1, pe2));
+                let d1 = cross_product(vector_from_points(pe1, ps1), vector_from_points(pe1, pe2));
                 let d2 = cross_product(vector_from_points(pe1, ps2), vector_from_points(pe1, pe2));
                 let d3 = cross_product(vector_from_points(ps1, pe1), vector_from_points(ps1, ps2));
                 let d4 = cross_product(vector_from_points(ps1, pe2), vector_from_points(ps1, ps2));
-                if (d1<0 && d2>0)||((d1>0 && d2<0)) && (d3>0 && d4<0) || (d3<0 && d4>0) {
-                    //TODO This doesn't actually work right now, need to fix
-                    //result.is_valid = false;
-                    //result.invalid_edges_intersecting.push(edge_index);
+                if ((d1<0 && d2>0)||(d1>0 && d2<0)) && ((d3>0 && d4<0) || (d3<0 && d4>0)) {
+                    dbg!(ps1,ps2,pe1,pe2,d1,d2,d3,d4);
+                    result.is_valid = false;
+                    result.invalid_edges_intersecting.push(edge_index);
                 }
             }
         }
@@ -79,7 +79,6 @@ impl Solution {
     }
 
     fn is_point_inside_shape(p: &Vec<i128>, shape: &Vec<Vec<i128>>, rotation_direction: RotationDirection) -> bool{
-        dbg!(&p);
         //if p is on the border, it's inside, no need to continue further
         if is_point_on_shape(&p,shape) {
             return true;
@@ -100,12 +99,8 @@ impl Solution {
                 //horizontal lines aren't helpful, they only matter if the point is on the line, which is already checked
                 continue;
             }
-            dbg!(p1);
-            dbg!(p2);
-            dbg!(m);
             // interesting line
             if (p1.1 <= y && p2.1 >= y) || (p1.1 >= y && p2.1 <= y) {
-                dbg!("This line segment crosses the y");
                 //find the x value of the intersection with this line and the horizontal ray from the point
                 let ray_x = (((y - p1.1) as f64)/(m as f64)) + p1.0 as f64;
                 if ray_x < x as f64{
@@ -117,7 +112,6 @@ impl Solution {
                                continue;
                            }
                         }
-                    dbg!("incrementing crossings");
                     crossings += 1;
                 }
             }
@@ -182,9 +176,9 @@ mod tests {
             ]
         };
         assert!(s1.check(&p).is_valid());
-        //assert!(dbg!(s2.check(&p)).is_valid());
+        assert!(s2.check(&p).is_valid());
         assert!(s3.check(&p).is_valid());
-        //assert!(dbg!(s4.check(&p)).is_valid());
+        assert!(s4.check(&p).is_valid());
         assert!(s5.check(&p).is_valid());
     }
     #[test]
