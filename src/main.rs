@@ -31,7 +31,12 @@ fn main() {
             let mut problem_text = String::new();
             File::open(problem_file).unwrap().read_to_string(&mut problem_text).unwrap();
             let p : Problem = serde_json::from_str(&problem_text).unwrap();
-
+            
+            match solver {
+                &opt::Solver::Basic => {
+                    Basic::new().solve(&p);
+                }
+            }
         }
     }
 }
