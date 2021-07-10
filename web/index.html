@@ -29,6 +29,13 @@
 				width: auto;
 				text-align: left;
 			}
+			.point-error td {
+				background-color: #dcc;
+			}
+			td.ratio-error {
+				color: #d00;
+				font-weight: bold;
+			}
 			tr:hover {
 				background-color: #cdd;
 			} 
@@ -84,6 +91,7 @@
 					<thead>
 						<tr>
 							<th></th>
+							<th>In</th>
 							<th>X1</th>
 							<th>Y1</th>
 							<th>X2</th>
@@ -102,7 +110,7 @@
 			<div class="column">
 				<svg id="vis" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0.0 0.0 100.0 100.0">
 					<path id="hole" d="M 45.0,80.0 L 35.0,95.0 L 5.0,95.0 L 35.0,50.0 L 5.0,5.0 L 35.0,5.0 L 95.0,95.0 L 65.0,95.0 L 55.0,80.0 Z M 0.0,0.0 L 100.0,0.0 L 100.0,100.0 L 0.0,100.0" style="fill:#00000066;fill-rule:evenodd;stroke:none;" />
-					<g id="figure" style="fill:none;stroke:#ff000044;stroke-linecap:round" transform="translate(0.0, 0.0)">
+					<g id="figure" style="fill:none;stroke:#aaaaff44;stroke-linecap:round" transform="translate(0.0, 0.0)">
 						<path d="M 30.0,95.0 L 40.0,65.0" />
 						<path d="M 40.0,65.0 L 40.0,35.0" />
 						<path d="M 40.0,35.0 L 20.0,40.0" />
@@ -137,6 +145,8 @@
 					<g id="solution" style="fill:none;stroke:#00ff0088;stroke-linecap:round" transform="translate(0.0, 0.0)">
 						<path d="M 10.0,85.0 L 30.0,55.0" />
 						<path d="M 30.0,55.0 L 30.0,25.0" />
+					</g>
+					<g id="error-paths" style="fill:none;stroke:#ff000088;stroke-linecap:round" transform="translate(0.0, 0.0)">
 					</g>
 				</svg>
 			</div>
@@ -225,9 +235,36 @@
 		return Math.round(dislikes);
 	}
 
+	function pointInside(point, vertices) {
+		let x = point[0];
+		let y = point[1];
+		let crossings = 0;
+
+		// Odd number of crossings is inside
+		let j = vertices.length - 1;
+		for (var i = 0; i < vertices.length; i++) {
+			let xi = vertices[i][0];
+			let yi = vertices[i][1];
+			let xj = vertices[j][0];
+			let yj = vertices[j][1];
+			
+			if(((yi > y) != (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)){
+				crossings += 1;
+			}
+			j = i;
+		}
+
+		return (crossings%2)==1;
+	};
+
 	function populateEpsilonTable(table, epsilon, edges, oldVertices, vertices, hole) {
 		while(table.firstChild) {
 			table.removeChild(table.firstChild);
+		}
+
+		let errorPaths = document.getElementById('error-paths');
+		while(errorPaths.firstChild) {
+			errorPaths.removeChild(errorPaths.firstChild);
 		}
 
 		let i=0;
@@ -239,16 +276,31 @@
 			let newLength = squaredDistance(p1, p2);
 			let oldLength = squaredDistance(oldP1, oldP2);
 			let ratio = calculateRatio([oldP1, oldP2], [p1, p2]);
+			let isInside = pointInside(p1, hole) && pointInside(p2, hole);
+			let maxRatio = epsilon/1000000;
 
 			document.getElementById('epsilon').textContent = epsilon;
-			document.getElementById('max-ratio').textContent = epsilon/1000000;
+			document.getElementById('max-ratio').textContent = maxRatio;
 			document.getElementById('possible-points').textContent = possiblePoints(vertices.length, edges.length, hole.length);
 			document.getElementById('dislikes').textContent = calculateDislikes(hole, vertices);
 
 			let tr = document.createElement('tr');
+			if(!isInside || ratio > maxRatio){
+				tr.classList.add('point-error');
+
+				let path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+				path.setAttribute('d', 'M ' + p1[0] + ',' + p1[1] + ' L ' + p2[0] + ',' + p2[1]);
+				errorPaths.appendChild(path);
+			}
+
 			let td = document.createElement('td');
 			td.textContent = i;
 			tr.appendChild(td);
+
+			td = document.createElement('td');
+			td.textContent = isInside ? '🟢' : '❌';
+			tr.appendChild(td);
+			tr.add
 
 			td = document.createElement('td');
 			td.textContent = p1[0];
@@ -276,10 +328,11 @@
 
 			td = document.createElement('td');
 			td.textContent = ratio.toFixed(5);
+			if(ratio>maxRatio){
+				td.classList.add('ratio-error');
+			}
 			tr.appendChild(td);
 
-			//path.setAttribute('d', 'M ' + p1[0] + ',' + p1[1] + ' L ' + p2[0] + ',' + p2[1]);
-			//element.appendChild(path);
 			table.appendChild(tr);
 			i++;
 
