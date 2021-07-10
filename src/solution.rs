@@ -9,7 +9,8 @@ pub struct Solution {
 }
 #[derive(Debug)]
 pub struct CheckResult {
-    is_valid: bool
+    is_valid: bool,
+    invalid_vertices: Vec<Vec<i128>>
 }
 impl CheckResult {
     pub fn is_valid(&self) -> bool {
@@ -19,60 +20,67 @@ impl CheckResult {
 
 impl Solution {
     pub fn check(&self, problem: &Problem) -> CheckResult {
+        let mut result = CheckResult {is_valid: true, invalid_vertices: Vec::new()};
         //first, are all the vertices inside or on the shape.
         let rotation_direction = determine_rotation(&problem.hole);
         for p in &self.vertices {
-            dbg!(&p);
-            //if p is on the border, it's inside, no need to continue further
-            if is_point_on_shape(&p,&problem.hole) {
-                continue;
-            }
-            let x = p[0];
-            let y = p[1];
-            let mut crossings = 0;
-            let mut hole = problem.hole.clone();
-            if rotation_direction == RotationDirection::Clockwise {
-                hole.reverse();
-            }
-            for i in 0..hole.len() {
-                //does the current edge cross the y value of the point in question
-                let p1= (hole[i][0], hole[i][1]);
-                let p2 = (hole[((i+1)%hole.len())][0], hole[((i+1)%hole.len())][1]);
-                let m: f64 = ((p2.1-p1.1) as f64)/((p2.0-p1.0) as f64);
-                if m == 0.0 {
-                    //horizontal lines aren't helpful, they only matter if the point is on the line, which is already checked
-                    continue;
-                }
-                dbg!(p1);
-                dbg!(p2);
-                dbg!(m);
-                // interesting line
-                if (p1.1 <= y && p2.1 >= y) || (p1.1 >= y && p2.1 <= y) {
-                    dbg!("This line segment crosses the y");
-                    //find the x value of the intersection with this line and the horizontal ray from the point
-                    let ray_x = (((y - p1.1) as f64)/(m as f64)) + p1.0 as f64;
-                    if ray_x < x as f64{
-                        //deal with edge cases regarding lines at exactly the vertical height of a hole vertex
-                        let found_point = (ray_x as i128, y);
-                        if (found_point.0 == p1.0 && found_point.1 == p1.1) ||
-                           (found_point.0 == p2.0 && found_point.1 == p2.1) {
-                               if p1.1 > y || p2.1 > y {
-                                   continue;
-                               }
-                           }
-                        dbg!("incrementing crossings");
-                        crossings += 1;
-                    }
-                }
-                else { continue; }
-            }
-            if (crossings % 2) == 0 {
-                return CheckResult {is_valid: false};
+            if !Self::is_point_inside_shape(&p, &problem.hole, rotation_direction) {
+                result.is_valid = false;
+                result.invalid_vertices.push(p.clone());
             }
         }
         //TODO second, does the solution satisfy the elasticity constraint
         //TODO third, do any lines intersect with the hole boundaries
-        CheckResult{ is_valid: true}
+        result
+    }
+
+    fn is_point_inside_shape(p: &Vec<i128>, shape: &Vec<Vec<i128>>, rotation_direction: RotationDirection) -> bool{
+        dbg!(&p);
+        //if p is on the border, it's inside, no need to continue further
+        if is_point_on_shape(&p,shape) {
+            return true;
+        }
+        let x = p[0];
+        let y = p[1];
+        let mut crossings = 0;
+        let mut hole = shape.clone();
+        if rotation_direction == RotationDirection::Clockwise {
+            hole.reverse();
+        }
+        for i in 0..hole.len() {
+            //does the current edge cross the y value of the point in question
+            let p1= (hole[i][0], hole[i][1]);
+            let p2 = (hole[((i+1)%hole.len())][0], hole[((i+1)%hole.len())][1]);
+            let m: f64 = ((p2.1-p1.1) as f64)/((p2.0-p1.0) as f64);
+            if m == 0.0 {
+                //horizontal lines aren't helpful, they only matter if the point is on the line, which is already checked
+                continue;
+            }
+            dbg!(p1);
+            dbg!(p2);
+            dbg!(m);
+            // interesting line
+            if (p1.1 <= y && p2.1 >= y) || (p1.1 >= y && p2.1 <= y) {
+                dbg!("This line segment crosses the y");
+                //find the x value of the intersection with this line and the horizontal ray from the point
+                let ray_x = (((y - p1.1) as f64)/(m as f64)) + p1.0 as f64;
+                if ray_x < x as f64{
+                    //deal with edge cases regarding lines at exactly the vertical height of a hole vertex
+                    let found_point = (ray_x as i128, y);
+                    if (found_point.0 == p1.0 && found_point.1 == p1.1) ||
+                       (found_point.0 == p2.0 && found_point.1 == p2.1) {
+                           if p1.1 > y || p2.1 > y {
+                               continue;
+                           }
+                        }
+                    dbg!("incrementing crossings");
+                    crossings += 1;
+                }
+            }
+            else { continue; }
+        }
+        
+    return (crossings % 2) == 1;
     }
 }
 

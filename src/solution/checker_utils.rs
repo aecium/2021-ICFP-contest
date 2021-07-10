@@ -1,5 +1,5 @@
 use crate::problem::Point;
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Eq, Debug, Clone, Copy)]
 pub enum RotationDirection {
     Clockwise,
     CounterClockwise
