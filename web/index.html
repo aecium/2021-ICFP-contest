@@ -278,6 +278,10 @@
 		return (crossings%2)==1;
 	};
 
+	function callHilightLine(element, i){
+		element.onmouseover = function(e){hilightLine(i);};
+	}
+
 	function hilightLine(i){
 		edge = problemData.figure.edges[i];
 		
@@ -405,6 +409,7 @@
 				td.classList.add('ratio-error');
 			}
 			tr.appendChild(td);
+			callHilightLine(tr, i);
 
 			table.appendChild(tr);
 			i++;
@@ -431,7 +436,6 @@
 			el.classList.remove('success');
 			el.classList.add('fail');
 		}
-
 	}
 
 	function getBounds(points) {
