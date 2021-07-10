@@ -6,10 +6,9 @@ source .env
 
 solutions_path=../solutions
 
-solutions=$(ls $solutions_path/*.json)
-
-for solution in $solutions; do
-    solution_id=$(basename --suffix=.json $solution)
+send_solution(){
+    solution=${1}
+        solution_id=$(basename --suffix=.json $solution)
 
     if [ -f  ${solutions_path}/${solution_id}.lastSent ]; then
         last_sent=$(($(date +%s) - $(date +%s -r ${solutions_path}/${solution_id}.lastSent)))
@@ -31,5 +30,15 @@ for solution in $solutions; do
         echo "Too soon to submit: ${solution}"
         echo -e "Waite another $(( 305 - ${last_sent} )) seconds\n"
     fi
-done
+}
+echo $1
+if [ ! -z ${1} ]; then
+    send_solution ${1}
+else
+    solutions=$(ls $solutions_path/*.json)
+    for solution in $solutions; do
+        send_solution ${solution}
+    done
+fi
+
 echo Done
