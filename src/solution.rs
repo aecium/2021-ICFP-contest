@@ -34,8 +34,6 @@ impl Solution {
             if rotation_direction == RotationDirection::Clockwise {
                 hole.reverse();
             }
-            // hold the last x, this is only for a specific special case where the point in question is exactly horizontal with a point in the hole
-            let mut last_x = -1.0;
             for i in 0..hole.len() {
                 //does the current edge cross the y value of the point in question
                 let p1= (hole[i][0], hole[i][1]);
@@ -53,8 +51,15 @@ impl Solution {
                     dbg!("This line segment crosses the y");
                     //find the x value of the intersection with this line and the horizontal ray from the point
                     let ray_x = (((y - p1.1) as f64)/(m as f64)) + p1.0 as f64;
-                    if ray_x < x as f64 && ray_x != last_x{
-                        last_x = ray_x;
+                    if ray_x < x as f64{
+                        //deal with edge cases regarding lines at exactly the vertical height of a hole vertex
+                        let found_point = (ray_x as i128, y);
+                        if (found_point.0 == p1.0 && found_point.1 == p1.1) ||
+                           (found_point.0 == p2.0 && found_point.1 == p2.1) {
+                               if p1.1 > y || p2.1 > y {
+                                   continue;
+                               }
+                           }
                         dbg!("incrementing crossings");
                         crossings += 1;
                     }
@@ -93,7 +98,7 @@ mod tests {
                     vec![3,3]
                 ]
             },
-            epsilon: 2
+            epsilon: 200000
         };
         let s1 = Solution {
             vertices: vec![
@@ -195,7 +200,38 @@ mod tests {
                 vec![8,3]
             ]
         };
-
         assert!(!s.check(&p).is_valid());
+    }
+    #[test]
+    pub fn test_inside_shape_tricky_pt2_in() {
+        let p = Problem{
+            hole: vec![
+                vec![2,0],
+                vec![3,0],
+                vec![4,1],
+                vec![3,3],
+                vec![2,1],
+                vec![0,2],
+                vec![1,1],
+                vec![0,1],
+            ],
+            figure: Figure{
+                edges: vec![
+                    vec![0,1]
+                ],
+                vertices: vec![
+                    vec![3,1],
+                    vec![3,2]
+                ]
+            },
+            epsilon: 2
+        };
+        let s = Solution {
+            vertices: vec![
+                vec![3,1],
+                vec![3,2]
+            ]
+        };
+        assert!(s.check(&p).is_valid());
     }
 }
