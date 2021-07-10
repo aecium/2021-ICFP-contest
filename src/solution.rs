@@ -14,16 +14,25 @@ pub struct Solution {
 #[derive(Serialize, Debug)]
 pub struct CheckResult {
     is_valid: bool,
-    invalid_vertices: Vec<usize>,
-    invalid_edges_stretched: Vec<usize>,
-    invalid_edges_intersecting: Vec<usize>
+    pub invalid_vertices: Vec<usize>,
+    pub invalid_edges_stretched: Vec<StretchedEdge>,
+    pub invalid_edges_intersecting: Vec<IntersectingEdge>
 }
 impl CheckResult {
     pub fn is_valid(&self) -> bool {
         return self.is_valid;
     }
 }
-
+#[derive(Debug, Serialize)]
+pub struct StretchedEdge {
+    index: usize,
+    error: f64
+}
+#[derive(Debug, Serialize)]
+pub struct IntersectingEdge {
+    shape_edge_index: usize,
+    hole_edge_start: usize
+}
 impl Solution {
     pub fn check(&self, problem: &Problem) -> CheckResult {
         let mut result = CheckResult {
@@ -50,10 +59,13 @@ impl Solution {
             let p2_prime = &self.vertices[edge[1]];
             let numerator = (((p2_prime[0]-p1_prime[0]).pow(2)+(p2_prime[1]-p1_prime[1]).pow(2)) as f64).sqrt();
             let denominator = (((p2[0]-p1[0]).pow(2)+(p2[1]-p1[1]).pow(2)) as f64).sqrt();
-
-            if ((numerator/denominator) - 1.0).abs() * 1_000_000.0 > problem.epsilon as f64 {
+            let error = ((numerator/denominator) - 1.0) * 1_000_000.0;
+            if error.abs() > problem.epsilon as f64 {
                 result.is_valid = false;
-                result.invalid_edges_stretched.push(i);
+                result.invalid_edges_stretched.push(StretchedEdge {
+                    index: i,
+                    error: error
+                });
             }
         }
         //third, do any lines intersect with the hole boundaries
@@ -70,7 +82,10 @@ impl Solution {
                 let d4 = cross_product(vector_from_points(ps1, pe2), vector_from_points(ps1, ps2));
                 if ((d1<0 && d2>0)||(d1>0 && d2<0)) && ((d3>0 && d4<0) || (d3<0 && d4>0)) {
                     result.is_valid = false;
-                    result.invalid_edges_intersecting.push(edge_index);
+                    result.invalid_edges_intersecting.push(IntersectingEdge {
+                        shape_edge_index: edge_index,
+                        hole_edge_start: hole_edge,
+                    });
                 }
             }
         }

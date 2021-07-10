@@ -1,3 +1,4 @@
+use structopt::clap::arg_enum;
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
@@ -8,4 +9,15 @@ pub enum Opt {
         problem_file: String,
         solution_file: String
     },
+    Solve {
+        problem_file: String,
+        solver: Solver
+    }
+}
+
+arg_enum! {
+    #[derive(Debug)]
+    pub enum Solver {
+        Basic,
+    }
 }
