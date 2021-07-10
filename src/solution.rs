@@ -35,6 +35,7 @@ impl Solution {
                 result.invalid_vertices.push(i);
             }
         }
+        //second, does the solution satisfy the elasticity constraint
         for i in 0..problem.figure.edges.len() {
             let edge = &problem.figure.edges[i];
             let p1 = &problem.figure.vertices[edge[0]];
@@ -49,7 +50,6 @@ impl Solution {
                 result.invalid_edges_stretched.push(i);
             }
         }
-        //TODO second, does the solution satisfy the elasticity constraint
         //TODO third, do any lines intersect with the hole boundaries
         result
     }
