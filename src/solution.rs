@@ -10,7 +10,8 @@ pub struct Solution {
 #[derive(Debug)]
 pub struct CheckResult {
     is_valid: bool,
-    invalid_vertices: Vec<Vec<i128>>
+    invalid_vertices: Vec<usize>,
+    invalid_edges_stretched: Vec<usize>
 }
 impl CheckResult {
     pub fn is_valid(&self) -> bool {
@@ -20,13 +21,32 @@ impl CheckResult {
 
 impl Solution {
     pub fn check(&self, problem: &Problem) -> CheckResult {
-        let mut result = CheckResult {is_valid: true, invalid_vertices: Vec::new()};
+        let mut result = CheckResult {
+            is_valid: true,
+            invalid_vertices: Vec::new(),
+            invalid_edges_stretched: Vec::new()
+        };
         //first, are all the vertices inside or on the shape.
         let rotation_direction = determine_rotation(&problem.hole);
-        for p in &self.vertices {
+        for i in  0..self.vertices.len() {
+            let p = &self.vertices[i];
             if !Self::is_point_inside_shape(&p, &problem.hole, rotation_direction) {
                 result.is_valid = false;
-                result.invalid_vertices.push(p.clone());
+                result.invalid_vertices.push(i);
+            }
+        }
+        for i in 0..problem.figure.edges.len() {
+            let edge = &problem.figure.edges[i];
+            let p1 = &problem.figure.vertices[edge[0]];
+            let p2 = &problem.figure.vertices[edge[1]];
+            let p1_prime = &self.vertices[edge[0]];
+            let p2_prime = &self.vertices[edge[1]];
+            let numerator = (((p2_prime[0]-p1_prime[0]).pow(2)+(p2_prime[1]-p1_prime[1]).pow(2)) as f64).sqrt();
+            let denominator = (((p2[0]-p1[0]).pow(2)+(p2[1]-p1[1]).pow(2)) as f64).sqrt();
+
+            if ((numerator/denominator) - 1.0).abs() * 1_000_000.0 > problem.epsilon as f64 {
+                result.is_valid = false;
+                result.invalid_edges_stretched.push(i);
             }
         }
         //TODO second, does the solution satisfy the elasticity constraint
@@ -106,7 +126,7 @@ mod tests {
                     vec![3,3]
                 ]
             },
-            epsilon: 200000
+            epsilon: 20_000_000
         };
         let s1 = Solution {
             vertices: vec![
