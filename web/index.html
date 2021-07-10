@@ -25,6 +25,10 @@
 				flex-basis: 100%;
 				flex: 1;
 			}
+			#edges-wrapper {
+				max-height: 400px;
+				overflow: scroll;
+			}
 			table, td, th {
 				width: auto;
 				text-align: left;
@@ -34,6 +38,14 @@
 			}
 			td.ratio-error {
 				color: #d00;
+				font-weight: bold;
+			}
+			td.fail {
+				color: #d00;
+				font-weight: bold;
+			}
+			td.success {
+				color: #0d0;
 				font-weight: bold;
 			}
 			tr:hover {
@@ -83,6 +95,8 @@
 		<div class="row">
 			<div class="column">
 				<table class="horizontal">
+					<tr><th>Vertex Status:</th><td id="vertex-status"></td></tr>
+					<tr><th>Epsilon Status:</th><td id="epsilon-status"></td></tr>
 					<tr><th>Epsilon:</th><td id="epsilon"></td></tr>
 					<tr><th>Max Ratio:</th><td id="max-ratio"></td></tr>
 					<tr><th>Possible Points:</th><td id="possible-points"></td></tr>
@@ -90,24 +104,26 @@
 				</table>
 
 				<h2>Edges:</h2>
-				<table id="edges-table">
-					<thead>
-						<tr>
-							<th></th>
-							<th>In</th>
-							<th>X1</th>
-							<th>Y1</th>
-							<th>X2</th>
-							<th>Y2</th>
-							<th>Old Length²</th>
-							<th>New Length²</th>
-							<th>Ratio</th>
-						</tr>
-					</thead>
-					<tbody id="epsilon-table-body">
+				<div id="edges-wrapper">
+					<table id="edges-table">
+						<thead>
+							<tr>
+								<th></th>
+								<th>In</th>
+								<th>X1</th>
+								<th>Y1</th>
+								<th>X2</th>
+								<th>Y2</th>
+								<th>Old Length²</th>
+								<th>New Length²</th>
+								<th>Ratio</th>
+							</tr>
+						</thead>
+						<tbody id="epsilon-table-body">
 
-					</tbody>
-				</table>
+						</tbody>
+					</table>
+				</div>
 				<ul id="epsilon"></ul>
 			</div>
 			<div class="column">
@@ -283,7 +299,7 @@
 		let vertex = input.dataset.vertex;
 		let coord = input.dataset.coord;
 		let edge = problemData.figure.edges[i]
-		solutionData.vertices[edge[vertex]][coord] = input.value;
+		solutionData.vertices[edge[vertex]][coord] = parseInt(input.value);
 		document.getElementById('solution-data').value = JSON.stringify(solutionData);
 		redraw();
 	}
@@ -306,6 +322,10 @@
 	}
 
 	function populateEpsilonTable(table, epsilon, edges, oldVertices, vertices, hole) {
+		let maxRatio = epsilon/1000000;
+		let vertexStatus = true;
+		let epsilonStatus = true;
+
 		while(table.firstChild) {
 			table.removeChild(table.firstChild);
 		}
@@ -314,6 +334,11 @@
 		while(errorPaths.firstChild) {
 			errorPaths.removeChild(errorPaths.firstChild);
 		}
+
+		document.getElementById('epsilon').textContent = epsilon;
+		document.getElementById('max-ratio').textContent = maxRatio;
+		document.getElementById('possible-points').textContent = possiblePoints(vertices.length, edges.length, hole.length);
+		document.getElementById('dislikes').textContent = calculateDislikes(hole, vertices);
 
 		let i=0;
 		for(const edge of edges){
@@ -325,15 +350,15 @@
 			let oldLength = squaredDistance(oldP1, oldP2);
 			let ratio = calculateRatio([oldP1, oldP2], [p1, p2]);
 			let isInside = pointInside(p1, hole) && pointInside(p2, hole);
-			let maxRatio = epsilon/1000000;
-
-			document.getElementById('epsilon').textContent = epsilon;
-			document.getElementById('max-ratio').textContent = maxRatio;
-			document.getElementById('possible-points').textContent = possiblePoints(vertices.length, edges.length, hole.length);
-			document.getElementById('dislikes').textContent = calculateDislikes(hole, vertices);
 
 			let tr = document.createElement('tr');
 			if(!isInside || ratio > maxRatio){
+				if(!isInside){
+					vertexStatus = false;
+				}
+				if(ratio > maxRatio){
+					epsilonStatus = false;
+				}
 				tr.classList.add('point-error');
 
 				let path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -383,8 +408,30 @@
 
 			table.appendChild(tr);
 			i++;
-
 		}
+
+		let el = document.getElementById('vertex-status');
+		if(vertexStatus){
+			el.textContent = 'PASS';
+			el.classList.remove('fail');
+			el.classList.add('success');
+		} else {
+			el.textContent = 'FAIL';
+			el.classList.remove('success');
+			el.classList.add('fail');
+		}
+
+		el = document.getElementById('epsilon-status');
+		if(epsilonStatus){
+			el.textContent = 'PASS';
+			el.classList.remove('fail');
+			el.classList.add('success');
+		} else {
+			el.textContent = 'FAIL';
+			el.classList.remove('success');
+			el.classList.add('fail');
+		}
+
 	}
 
 	function getBounds(points) {
