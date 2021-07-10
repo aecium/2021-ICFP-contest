@@ -2,7 +2,7 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<title>Free Tacos ICFP Contest 2021 - Visualization and Submission Tool</title>
+		<title>Free Tacos ICFP Contest 2021 - Visualizer</title>
 		<style type="text/css">
 			body { font-family: monospace; }
 			textarea { width: 100%; }
@@ -26,7 +26,7 @@
 				flex: 1;
 			}
 			#edges-wrapper {
-				max-height: 400px;
+				max-height: 35vw;
 				overflow: scroll;
 			}
 			table, td, th {
@@ -60,7 +60,7 @@
 		</style>
 	</head>
 	<body>
-		<h1>Free Tacos ICFP Contest 2021 - Visualization and Submission Tool</h1>
+		<h1>Free Tacos ICFP Contest 2021 - Visualizer</h1>
 
 		<div>
 			<label for="problem-data">Problem</label>
@@ -507,7 +507,6 @@
 		let points = problemData.hole.slice();
 		points = points.concat(problemData.figure.vertices);
 		points = points.concat(solutionData.vertices);
-		console.log("XXX: ", points, problemData.figure.vertices, solutionData.vertices);
 		let bounds = getBounds(points);
 		let x1 = bounds[0][0]-5;
 		let y1 = bounds[0][1]-5;
@@ -529,6 +528,7 @@
 		document.getElementById('solution-save').textContent = 'Save ' + solutionName;
 		reader.onload = function(e) {
 			document.getElementById('problem-data').value = e.target.result;
+			resetSolution();
 			redraw();
 		}
 		reader.readAsText(file);
