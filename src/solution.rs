@@ -138,11 +138,10 @@ mod tests {
                 vec![3,3],
             ]
         };
-        //TODO uncomment these to check colinear and co-point solutions
-        //assert!(s1.check(&p).is_valid());
-        //assert!(s2.check(&p).is_valid());
-        //assert!(s3.check(&p).is_valid());
-        //assert!(s4.check(&p).is_valid());
+        assert!(s1.check(&p).is_valid());
+        assert!(s2.check(&p).is_valid());
+        assert!(s3.check(&p).is_valid());
+        assert!(s4.check(&p).is_valid());
         assert!(s5.check(&p).is_valid());
     }
     #[test]

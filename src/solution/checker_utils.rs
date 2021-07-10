@@ -20,6 +20,19 @@ pub fn determine_rotation(polygon: &Vec<Point>) -> RotationDirection {
 }
 //TODO Detect if point is on shape
 pub fn is_point_on_shape(p: &Point, shape: &Vec<Point>) -> bool {
+    for i in 0..shape.len() {
+        let p1= (shape[i][0], shape[i][1]);
+        let p2 = (shape[((i+1)%shape.len())][0], shape[((i+1)%shape.len())][1]);
+        if ((p[0]*(p1.1-p2.1))+(p1.0*(p2.1-p[1]))+(p2.0*(p[1]-p1.1))) == 0 {
+            //the points are colinear!
+            if ((p[0] >= p1.0 && p[0] <= p2.0) ||
+                (p[0] >= p2.0 && p[0] <= p1.0)) && 
+               ((p[1] >= p1.0 && p[1] <= p2.1) ||
+                (p[1] >= p2.0 && p[1] <= p1.1)) {
+                return true;
+            }
+        }
+    }
     false
 }
 
