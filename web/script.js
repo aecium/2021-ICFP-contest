@@ -487,6 +487,15 @@ function populateFileList(files, id, prefix){
 	}
 }
 
+function selectSolver(){
+
+}
+
+function runSolver(){
+	
+}
+
+
 redraw();
 loadProblemList();
 loadSolutionList();
