@@ -12,6 +12,10 @@ send_solution(){
 
     if [ -f  ${solutions_path}/${solution_id}.lastSent ]; then
         last_sent=$(($(date +%s) - $(date +%s -r ${solutions_path}/${solution_id}.lastSent)))
+        if [ $(date +%s -r ${solutions_path}/${solution_id}.lastSent) -gt $(date +%s -r ${solutions_path}/${solution_id}.json) ]; then
+            echo -e "woah there buckaroo.\nNo changes since the last submition of ${solution_id}.json"
+            return
+        fi
     else
         last_sent=999
     fi
