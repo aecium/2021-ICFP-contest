@@ -1,17 +1,17 @@
 use std::usize;
 
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 use crate::{problem::{Problem, Point}, solution::checker_utils::{RotationDirection, determine_rotation, is_point_on_shape}};
 
 use self::checker_utils::{cross_product, vector_from_points};
 
 mod checker_utils;
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Solution {
     pub vertices: Vec<Point>
 }
-#[derive(Debug)]
+#[derive(Serialize, Debug)]
 pub struct CheckResult {
     is_valid: bool,
     invalid_vertices: Vec<usize>,
@@ -69,7 +69,6 @@ impl Solution {
                 let d3 = cross_product(vector_from_points(ps1, pe1), vector_from_points(ps1, ps2));
                 let d4 = cross_product(vector_from_points(ps1, pe2), vector_from_points(ps1, ps2));
                 if ((d1<0 && d2>0)||(d1>0 && d2<0)) && ((d3>0 && d4<0) || (d3<0 && d4>0)) {
-                    dbg!(ps1,ps2,pe1,pe2,d1,d2,d3,d4);
                     result.is_valid = false;
                     result.invalid_edges_intersecting.push(edge_index);
                 }

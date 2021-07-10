@@ -1,30 +1,28 @@
+use std::{fs::File, io::Read};
+
 use problem::Problem;
 
 use solution::Solution;
+use structopt::StructOpt;
 
 mod problem;
 mod solution;
+mod opt;
+use opt::Opt;
 
 fn main() {
-    let data = r#"{
-        "hole":[[45,80],[35,95],[5,95],[35,50],[5,5],[35,5],[95,95],[65,95],[55,80]],
-        "epsilon":150000,
-        "figure":{
-            "edges":[[2,5],[5,4],[4,1],[1,0],[0,8],[8,3],[3,7],[7,11],[11,13],[13,12],[12,18],[18,19],[19,14],[14,15],[15,17],[17,16],[16,10],[10,6],[6,2],[8,12],[7,9],[9,3],[8,9],[9,12],[13,9],[9,11],[4,8],[12,14],[5,10],[10,15]],
-            "vertices":[[20,30],[20,40],[30,95],[40,15],[40,35],[40,65],[40,95],[45,5],[45,25],[50,15],[50,70],[55,5],[55,25],[60,15],[60,35],[60,65],[60,95],[70,95],[80,30],[80,40]]
-        }
-    }"#;
+    let matches = Opt::from_args();
+    match &matches {
+        Opt::Check { problem_file, solution_file } => {
+            let mut problem_text = String::new();
+            File::open(problem_file).unwrap().read_to_string(&mut problem_text).unwrap();
+            let mut solution_text = String::new();
+            File::open(solution_file).unwrap().read_to_string(&mut solution_text).unwrap();
 
-    let p: Problem = serde_json::from_str(data).unwrap();
-    let s: Solution = Solution {
-        vertices: vec![
-            vec![21, 28],vec![31, 28],vec![31, 87],vec![29, 41],vec![44, 43],vec![58, 70],
-            vec![38, 79],vec![32, 31],vec![36, 50],vec![39, 40],vec![66, 77],vec![42, 29],
-            vec![46, 49],vec![49, 38],vec![39, 57],vec![69, 66],vec![41, 70],vec![39, 60],
-            vec![42, 25],vec![40, 35]
-        ]
-    };
-    dbg!(&p);
-    dbg!(&s);
-    dbg!(&s.check(&p));
+            let p : Problem = serde_json::from_str(&problem_text).unwrap();
+            let s : Solution = serde_json::from_str(&solution_text).unwrap();
+            let result = s.check(&p);
+            println!("{}", serde_json::to_string(&result).unwrap());
+        }
+    }
 }
