@@ -42,6 +42,9 @@
 			table.horizontal td {
 				width: 70%;
 			}
+			.number-input {
+				width: 3em;
+			}
 		</style>
 	</head>
 	<body>
@@ -147,6 +150,8 @@
 						<path d="M 30.0,55.0 L 30.0,25.0" />
 					</g>
 					<g id="error-paths" style="fill:none;stroke:#ff000088;stroke-linecap:round" transform="translate(0.0, 0.0)">
+					</g>
+					<g id="hilight-paths" style="fill:none;stroke:#ff00ffff;stroke-linecap:round" transform="translate(0.0, 0.0)">
 					</g>
 				</svg>
 			</div>
@@ -257,6 +262,49 @@
 		return (crossings%2)==1;
 	};
 
+	function hilightLine(i){
+		edge = problemData.figure.edges[i];
+		
+		let g = document.getElementById('hilight-paths');
+		while(g.firstChild) {
+			g.removeChild(g.firstChild);
+		}
+		p1 = solutionData.vertices[edge[0]];
+		p2 = solutionData.vertices[edge[1]];
+		
+		let path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+		path.setAttribute('d', 'M ' + p1[0] + ',' + p1[1] + ' L ' + p2[0] + ',' + p2[1]);
+		g.appendChild(path);
+	}
+
+	function updateSolution(id){
+		let input = document.getElementById(id);
+		let i = input.dataset.i;
+		let vertex = input.dataset.vertex;
+		let coord = input.dataset.coord;
+		let edge = problemData.figure.edges[i]
+		solutionData.vertices[edge[vertex]][coord] = input.value;
+		document.getElementById('solution-data').value = JSON.stringify(solutionData);
+		redraw();
+	}
+
+	function createPointInput(i, vertex, coord, value){
+		let name = 'point-'+i+'-'+vertex+'-'+coord;
+		let input = document.createElement('input');
+		input.id = name;
+		input.setAttribute('type', 'number');
+		input.onfocus = function(e){hilightLine(i);};
+		input.onchange = function(e){updateSolution(name);};
+		input.dataset.i = i;
+		input.dataset.vertex = vertex;
+		input.dataset.coord = coord;
+		input.name = name;
+		input.value = value;
+		input.size = 3;
+		input.classList.add('number-input');
+		return input;
+	}
+
 	function populateEpsilonTable(table, epsilon, edges, oldVertices, vertices, hole) {
 		while(table.firstChild) {
 			table.removeChild(table.firstChild);
@@ -303,19 +351,19 @@
 			tr.add
 
 			td = document.createElement('td');
-			td.textContent = p1[0];
+			td.appendChild(createPointInput(i, 0, 0, p1[0]));
 			tr.appendChild(td);
 
 			td = document.createElement('td');
-			td.textContent = p1[1];
+			td.appendChild(createPointInput(i, 0, 1, p1[1]));
 			tr.appendChild(td);
 
 			td = document.createElement('td');
-			td.textContent = p2[0];
+			td.appendChild(createPointInput(i, 1, 0, p2[0]));
 			tr.appendChild(td);
 
 			td = document.createElement('td');
-			td.textContent = p2[1];
+			td.appendChild(createPointInput(i, 1, 1, p2[1]));
 			tr.appendChild(td);
 
 			td = document.createElement('td');
@@ -354,12 +402,14 @@
 		return [[minX, minY],[maxX, maxY]];
 	}
 
+	let problemData = {};
+	let solutionData = {};
 	function redraw() {
 		let svg = document.getElementById('vis');
 		let hole = document.getElementById('hole');
 		let figure = document.getElementById('figure');
 		let solution = document.getElementById('solution');
-		let problemData = JSON.parse(document.getElementById('problem-data').value);
+		problemData = JSON.parse(document.getElementById('problem-data').value);
 
 		let bounds = getBounds(problemData.hole);
 		let x1 = bounds[0][0]-5;
@@ -370,8 +420,6 @@
 
 		hole.setAttribute('d', pathToHole(problemData.hole));
 		setElementPaths(figure, problemData.figure.edges, problemData.figure.vertices);
-
-		let solutionData = {};
 
 		try {
 			solutionData = parseSolutionData(problemData, document.getElementById('solution-data').value);
