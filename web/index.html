@@ -146,13 +146,17 @@
 	function pathToHole(points) {
 		let hole = '';
 		let op = 'M ';
+		let bounds = getBounds(points);
+		let x1 = bounds[0][0]-5;
+		let y1 = bounds[0][1]-5;
+		let x2 = bounds[1][0]+5;
+		let y2 = bounds[1][1]+5;
+
 		for(const point of points){
 			hole += op + point[0] + "," + point[1];
 			op = ' L ';
 		}
-		console.log(hole);
-		console.log('M 45.0,80.0 L 35.0,95.0 L 5.0,95.0 L 35.0,50.0 L 5.0,5.0 L 35.0,5.0 L 95.0,95.0 L 65.0,95.0 L 55.0,80.0 Z M 0.0,0.0 L 100.0,0.0 L 100.0,100.0 L 0.0,100.0');
-		return hole + ' Z M 0.0,0.0 L 100.0,0.0 L 100.0,100.0 L 0.0,100.0';
+		return hole + ' Z M '+x1+','+y1+' L '+x2+','+y1+' L '+x2+','+y2+' L '+x1+','+y2;
 	}
 
 	function setElementPaths(element, edges, vertices) {
@@ -187,28 +191,6 @@
 			throw error;
 		}
 		return solutionData;
-	}
-
-	function redraw() {
-		let svg = document.getElementById('vis');
-		let hole = document.getElementById('hole');
-		let figure = document.getElementById('figure');
-		let solution = document.getElementById('solution');
-		let problemData = JSON.parse(document.getElementById('problem-data').value);
-		console.log(document.getElementById('solution-data').value);
-
-		hole.setAttribute('d', pathToHole(problemData.hole));
-		setElementPaths(figure, problemData.figure.edges, problemData.figure.vertices);
-
-		let solutionData = {};
-
-		try {
-			solutionData = parseSolutionData(problemData, document.getElementById('solution-data').value);
-			setElementPaths(solution, problemData.figure.edges, solutionData.vertices);
-		} catch(error) {
-			return;
-		}
-
 	}
 
 	function resetSolution() {
@@ -304,12 +286,34 @@
 		}
 	}
 
+	function getBounds(points) {
+		let minX = Number.MAX_SAFE_INTEGER;
+		let minY = Number.MAX_SAFE_INTEGER;
+		let maxX = 0;
+		let maxY = 0;
+
+		for(const point of points) {
+			minX = Math.min(minX, point[0]);
+			minY = Math.min(minY, point[1]);
+			maxX = Math.max(maxX, point[0]);
+			maxY = Math.max(maxY, point[1]);
+		}
+		return [[minX, minY],[maxX, maxY]];
+	}
+
 	function redraw() {
 		let svg = document.getElementById('vis');
 		let hole = document.getElementById('hole');
 		let figure = document.getElementById('figure');
 		let solution = document.getElementById('solution');
 		let problemData = JSON.parse(document.getElementById('problem-data').value);
+
+		let bounds = getBounds(problemData.hole);
+		let x1 = bounds[0][0]-5;
+		let y1 = bounds[0][1]-5;
+		let x2 = bounds[1][0]+10;
+		let y2 = bounds[1][1]+10;
+		svg.setAttributeNS(null, 'viewBox', '' + x1 + ' ' + y1 + ' ' + x2 + ' ' + y2);
 
 		hole.setAttribute('d', pathToHole(problemData.hole));
 		setElementPaths(figure, problemData.figure.edges, problemData.figure.vertices);
