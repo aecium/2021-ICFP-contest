@@ -19,5 +19,7 @@ arg_enum! {
     #[derive(Debug)]
     pub enum Solver {
         Basic,
+        Cat,
+        SteppyCat,
     }
 }

@@ -13,6 +13,9 @@ use opt::Opt;
 mod solvers;
 use solvers::Basic;
 
+mod cats;
+use cats::{ Cat, SteppyCat };
+
 fn main() {
     let matches = Opt::from_args();
     match &matches {
@@ -35,6 +38,12 @@ fn main() {
             match solver {
                 &opt::Solver::Basic => {
                     Basic::new().solve(&p);
+                },
+                &opt::Solver::Cat => {
+                    Cat::new().solve(&p, problem_file);
+                }
+                &opt::Solver::SteppyCat => {
+                    SteppyCat::new().solve(&p, problem_file);
                 }
             }
         }
