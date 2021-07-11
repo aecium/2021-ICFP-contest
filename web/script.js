@@ -487,12 +487,38 @@ function populateFileList(files, id, prefix){
 	}
 }
 
+let solverRunning = false;
 function selectSolver(){
-
+	stopSolver();
 }
 
 function runSolver(){
-	
+	console.log("TODO: Start the solver.");
+	if(!solverRunning){
+		let problem = document.getElementById('select-problem').value.split('.',1)[0];
+		let solver = document.getElementById('select-solver').value;
+		if(solver=='BIONEURAL'){
+			alert("This means you. Start editing...");
+			return;
+		}
+		solverRunning = true;
+		fetch('problem/'+problem+'/solve/'+solver)
+			.then(response => response.json())
+			.then(data => {
+				console.log(data);
+				solutionData = {'vertices': data.vertices};
+				document.getElementById('solution-data').value = data.output;
+				solverRunning = false;
+				redraw();
+			});
+	}
+}
+
+function stopSolver(){
+	if(solverRunning){
+		console.log("TODO: Stop the solver.");
+		solverRunning = false
+	}
 }
 
 

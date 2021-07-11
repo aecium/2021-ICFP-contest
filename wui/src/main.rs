@@ -4,10 +4,27 @@ use rocket::fs::{FileServer, relative};
 use rocket::serde::json::{Json, Value, json};
 use rocket::serde::{Serialize, Deserialize};
 use std::fs;
+use std::process::Command;
 
 #[get("/sandwich")]
 fn sandwich() -> &'static str {
     "🥪"
+}
+
+#[get("/problem/<id>/solve/<solver>")]
+fn solve(id: usize, solver: &str) -> Value {
+    let output = Command::new("/bin/cat")
+                        .arg(format!("../solutions/{}.json", id))
+                        .output()
+                        .expect("failed to execute process");
+
+    println!("status: {}", output.status);
+    println!("stdout: {}", String::from_utf8_lossy(&output.stdout));
+    println!("stderr: {}", String::from_utf8_lossy(&output.stderr));
+
+    assert!(output.status.success());
+
+    json!({"id": id, "solver": solver, "output": String::from_utf8(output.stdout).unwrap()})
 }
 
 #[get("/taco")]
@@ -52,6 +69,7 @@ fn rocket() -> _ {
     rocket::build()
         .mount("/", routes![sandwich])
         .mount("/", routes![taco])
+        .mount("/", routes![solve])
         .mount("/", routes![list_problems])
         .mount("/", routes![list_solutions])
         .mount("/problems", FileServer::from(relative!("../problems")))
