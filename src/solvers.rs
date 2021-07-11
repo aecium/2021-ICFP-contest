@@ -1,9 +1,10 @@
-use core::num;
-use std::thread;
+use crate::solvers::solver_utils::RandRound;
 
 use rand::prelude::*;
 
 use crate::{problem::{Point, Problem}, solution::Solution};
+
+mod solver_utils;
 
 pub struct Basic;
 impl Basic {
@@ -12,7 +13,7 @@ impl Basic {
         let mut solution = Solution {
             vertices: problem.figure.vertices.clone()
         };
-        let MAX_ITERATIONS: usize = 1_000_000_000;
+        const MAX_ITERATIONS: usize = 50_000;
         for _i in 0..MAX_ITERATIONS {
             let result = solution.check(&problem);
             if result.is_valid() {
@@ -26,10 +27,63 @@ impl Basic {
                     solution.vertices[*p] = vec![new_loc.0, new_loc.1];
                 } else if result.invalid_edges_intersecting.len() > 0 {
                     //fix an edge
-                    break;
+                    //use the lazy way and teleport one of the points to the other
+                    let edge_index = result.invalid_edges_intersecting[0].shape_edge_index;
+                    let p1 = &solution.vertices[problem.figure.edges[edge_index][0]];
+                    solution.vertices[problem.figure.edges[edge_index][1]] = p1.clone();
                 } else if result.invalid_edges_stretched.len() > 0 {
-                    break;
-                    //fix a stretching problem
+                    let invalid_edge = result.invalid_edges_stretched[0].index;
+                    //first, how far do we need to move these points?
+                    //how far apart are they now?
+                    let p1 = (solution.vertices[problem.figure.edges[invalid_edge][0]][0],solution.vertices[problem.figure.edges[invalid_edge][0]][1]);
+                    let p2 = (solution.vertices[problem.figure.edges[invalid_edge][1]][0],solution.vertices[problem.figure.edges[invalid_edge][1]][1]);
+                    let d_current = (((p2.0-p1.0).pow(2)+(p2.1-p1.1).pow(2)) as f64).sqrt();
+                    //how far apart were they?
+                    let op1 = &problem.figure.vertices[problem.figure.edges[invalid_edge][0]];
+                    let op2 = &problem.figure.vertices[problem.figure.edges[invalid_edge][1]];
+                    let vo = (op2[0]-op1[0],op2[1]-op1[1]);
+                    let d_orig = ((vo.0.pow(2)+vo.1.pow(2)) as f64).sqrt();
+                    let delta = if d_current == 0.0 {
+                        //delta should be the original distance between the two points on the edges / 2
+                        d_orig / 2.0
+                    } else {
+                        // figure out which of the two distances we need to achieve
+                        let ef = problem.epsilon as f64/1_000_000.0;
+                        let d_min = ((d_orig * d_orig) * ((-1.0 * ef) + 1.0)).sqrt();
+                        let d_max = ((d_orig * d_orig) * (ef + 1.0)).sqrt();
+
+                        if (d_max - d_current).abs() < (d_min - d_current).abs() {
+                            //max is closer, calculate delta using that
+                            (d_max - d_current) / 2.0
+                        } else {
+                            //max is closer, calculate delta using that
+                            (d_min - d_current) / 2.0
+                        }
+                    };
+                    //now we have a delta, time to move some points
+                    let uv12 = if d_current == 0.0 {
+                        //if the points are in the same place, their unit vector is undefined
+                        // let's pick a random one, it has to work eventually, right?
+                        let mut rng = rand::thread_rng();
+                        let x: f64 = rng.gen();
+                        let y: f64 = rng.gen();
+                        let len = ((x * x) + (y * y)).sqrt();
+                        let x_normalized = x/len;
+                        let y_normalized = y/len;
+                        (x_normalized,y_normalized)
+                    } else {
+                        (((p2.0-p1.0) as f64)/d_current,((p2.1-p1.1) as f64)/d_current)
+                    };
+                    let p2_x_new = p2.0 as f64+ (uv12.0 * delta);
+                    let p2_y_new = p2.1 as f64+ (uv12.1 * delta);
+                    let p1_x_new = p1.0 as f64+ (uv12.0 * delta * -1.0);
+                    let p1_y_new = p1.1 as f64+ (uv12.1 * delta * -1.0);
+
+                    let p2_new = vec![p2_x_new.rand_round() as i128,p2_y_new.rand_round() as i128];
+                    let p1_new = vec![p1_x_new.rand_round() as i128,p1_y_new.rand_round() as i128];
+
+                    solution.vertices[problem.figure.edges[invalid_edge][0]] = p1_new;
+                    solution.vertices[problem.figure.edges[invalid_edge][1]] = p2_new;
                 }
             }
         }
@@ -77,8 +131,7 @@ impl Basic {
            ((p_new.1 <= p1.1 as f64 && p_new.1 >= p2.1 as f64) ||
             (p_new.1 <= p2.1 as f64 && p_new.1 >= p1.1 as f64)) {
                 //it's between, just round and return
-                return (p_new.0.round() as i128, p_new.1.round() as i128);
-                
+                return (p_new.0.rand_round() as i128, p_new.1.rand_round() as i128);
             } else {
                 //uh oh, we need to saturate to one of the points.
                 let l_p1 = ((v1.0.pow(2)+v1.1.pow(2))as f64).sqrt();

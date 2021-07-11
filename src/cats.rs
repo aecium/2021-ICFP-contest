@@ -1,6 +1,6 @@
 use std::{fs::File, io::Read, thread, time};
 
-use crate::{problem::{Point, Problem}, solution::Solution};
+use crate::{problem::{Problem}, solution::Solution};
 
 fn get_solution_for_problem_file(problem_file: &String) -> Option<Solution> {
     let solution_file = problem_file.replace("problem", "solution");

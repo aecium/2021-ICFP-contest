@@ -12,6 +12,11 @@ pub enum Opt {
     Solve {
         problem_file: String,
         solver: Solver
+    },
+    AutoSolve {
+        problem_dir: String,
+        solution_dir: String,
+        solver: Solver
     }
 }
 

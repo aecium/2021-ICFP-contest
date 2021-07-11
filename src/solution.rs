@@ -25,13 +25,13 @@ impl CheckResult {
 }
 #[derive(Debug, Serialize)]
 pub struct StretchedEdge {
-    index: usize,
-    error: f64
+    pub index: usize,
+    pub error: f64
 }
 #[derive(Debug, Serialize)]
 pub struct IntersectingEdge {
-    shape_edge_index: usize,
-    hole_edge_start: usize
+    pub shape_edge_index: usize,
+    pub hole_edge_start: usize
 }
 impl Solution {
     pub fn check(&self, problem: &Problem) -> CheckResult {
@@ -57,14 +57,14 @@ impl Solution {
             let p2 = &problem.figure.vertices[edge[1]];
             let p1_prime = &self.vertices[edge[0]];
             let p2_prime = &self.vertices[edge[1]];
-            let numerator = (((p2_prime[0]-p1_prime[0]).pow(2)+(p2_prime[1]-p1_prime[1]).pow(2)) as f64).sqrt();
-            let denominator = (((p2[0]-p1[0]).pow(2)+(p2[1]-p1[1]).pow(2)) as f64).sqrt();
-            let error = ((numerator/denominator) - 1.0) * 1_000_000.0;
-            if error.abs() > problem.epsilon as f64 {
+            let numerator = (p2_prime[0]-p1_prime[0]).pow(2)+(p2_prime[1]-p1_prime[1]).pow(2);
+            let denominator = (p2[0]-p1[0]).pow(2)+(p2[1]-p1[1]).pow(2);
+            let error = (((numerator as f64/denominator as f64) - 1.0) * 1_000_000.0) as i128;
+            if error.abs() as u128 > problem.epsilon {
                 result.is_valid = false;
                 result.invalid_edges_stretched.push(StretchedEdge {
                     index: i,
-                    error: error
+                    error: 0.0
                 });
             }
         }
@@ -319,7 +319,33 @@ mod tests {
             ]
         };
         let result = s1.check(&p);
-        dbg!(&result);
+        assert!(!&result.is_valid());
+    }
+    #[test]
+    pub fn test_found_epsilon_bug() {
+        let p = Problem{
+            hole: vec![
+                //take from problem 3
+                vec![50,70],vec![35,75],vec![35,65],vec![15,55],vec![30,45],vec![25,30],vec![30,30],vec![30,15],vec![45,25],vec![55,35],vec![55,15],vec![65,20],vec![80,5],vec![85,25],vec![90,25],vec![80,45],vec![95,45],vec![105,50],vec![100,65],vec![85,70],vec![90,85],vec![65,80],vec![60,85],vec![55,70],vec![50,110],vec![45,110]
+            ],
+            figure: Figure{
+                edges: vec![
+                    vec![0,1]
+                ],
+                vertices: vec![
+                    vec![9,6],
+                    vec![11,15]
+                ]
+            },
+            epsilon: 180_000
+        };
+        let s1 = Solution {
+            vertices: vec![
+                vec![46,27],
+                vec![45,40]
+            ]
+        };
+        let result = s1.check(&p);
         assert!(!&result.is_valid());
     }
 }
