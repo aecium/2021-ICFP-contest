@@ -4,7 +4,64 @@ use rocket::fs::{FileServer, relative};
 use rocket::serde::json::{Json, Value, json};
 use rocket::serde::{Serialize, Deserialize};
 use std::fs;
-use std::process::Command;
+use std::process::{Command, Stdio};
+use std::io::{BufRead, BufReader, Error, ErrorKind};
+use std::sync::atomic::{AtomicBool, Ordering};
+use rocket::State;
+use rocket::fairing::AdHoc;
+use rocket::http::Status;
+
+struct SolverRunning {
+    running: AtomicBool
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(crate = "rocket::serde")]
+struct SolverStatus {
+    done: bool,
+    line: String,
+}
+
+struct Tx(flume::Sender<SolverStatus>);
+struct Rx(flume::Receiver<SolverStatus>);
+
+#[get("/push/<event>")]
+fn push(event: String, tx: &State<Tx>) -> Result<(), Status> {
+    let status = SolverStatus{done: true, line: event};
+    tx.0.try_send(status).map_err(|_| Status::ServiceUnavailable)
+}
+
+#[get("/pop")]
+fn pop(rx: &State<Rx>) -> Option<Json<SolverStatus>> {
+    let status = rx.0.recv().ok();
+    return match status {
+        Some(s) => Some(Json(s)),
+        None => None,
+    }
+    //rx.0.try_recv().ok()
+}
+
+
+#[get("/status/run")]
+fn status_run(status: &State<SolverRunning>) -> Value {
+    status.running.fetch_or(true, Ordering::Relaxed);
+    let running = status.running.load(Ordering::Relaxed);
+    json!({"running": running})
+}
+
+#[get("/status/stop")]
+fn status_stop(status: &State<SolverRunning>) -> Value {
+    status.running.fetch_and(false, Ordering::Relaxed);
+    let running = status.running.load(Ordering::Relaxed);
+    json!({"running": running})
+}
+
+#[get("/status")]
+fn status(status: &State<SolverRunning>) -> Value {
+    let running = status.running.load(Ordering::Relaxed);
+    json!({"running": running})
+}
+
 
 #[get("/sandwich")]
 fn sandwich() -> &'static str {
@@ -12,19 +69,33 @@ fn sandwich() -> &'static str {
 }
 
 #[get("/problem/<id>/solve/<solver>")]
-fn solve(id: usize, solver: &str) -> Value {
-    let output = Command::new("/bin/cat")
-                        .arg(format!("../solutions/{}.json", id))
-                        .output()
-                        .expect("failed to execute process");
+fn solve(id: usize, solver: &str, tx: &State<Tx>) -> Result<Value, Error> {
+    let child = Command::new("../target/release/icfp_2021")
+                        .arg("solve")
+                        .arg(format!("../problems/{}.json", id))
+                        .arg(solver)
+                        .stdout(Stdio::piped())
+                        .spawn()?;
 
-    println!("status: {}", output.status);
-    println!("stdout: {}", String::from_utf8_lossy(&output.stdout));
-    println!("stderr: {}", String::from_utf8_lossy(&output.stderr));
+    let stdout = child.stdout.ok_or_else(|| Error::new(ErrorKind::Other,"Could not capture standard output."))?;
+    let reader = BufReader::new(stdout);
 
-    assert!(output.status.success());
+    let mut lines = "".to_string();
+    reader
+        .lines()
+        .for_each(|line| {
+            let line = line.unwrap();
+            println!("{}", line);
+            lines.push('\n');
+            lines.push_str(&line);
+            let status = SolverStatus{done: false, line: line.to_string()};
+            tx.0.try_send(status).map_err(|_| Status::ServiceUnavailable);
+        });
 
-    json!({"id": id, "solver": solver, "output": String::from_utf8(output.stdout).unwrap()})
+    let status = SolverStatus{done: true, line: "".to_string()};
+    tx.0.try_send(status).map_err(|_| Status::ServiceUnavailable);
+
+    Result::Ok(json!({"id": id, "solver": solver, "output": lines}))
 }
 
 #[get("/taco")]
@@ -66,7 +137,13 @@ fn index() -> &'static str {
 
 #[launch]
 fn rocket() -> _ {
+    let (tx, rx) = flume::bounded(32);
     rocket::build()
+        .manage(SolverRunning { running: AtomicBool::new(false) })
+        .manage(Tx(tx))
+        .manage(Rx(rx))
+        .mount("/queue", routes![push, pop])
+        .mount("/", routes![status, status_run, status_stop])
         .mount("/", routes![sandwich])
         .mount("/", routes![taco])
         .mount("/", routes![solve])

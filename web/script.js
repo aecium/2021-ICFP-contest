@@ -479,11 +479,16 @@ function populateFileList(files, id, prefix){
 		sortedFiles.splice(i, 0, file);
 	}
 
+	let first = true;
 	for(const file of sortedFiles){
 		let option = document.createElement('option');
 		option.textContent = prefix + file;
 		option.value = file;
 		select.appendChild(option);
+		if(first){
+			first = false;
+			select.value = file;
+		}
 	}
 }
 
@@ -492,8 +497,8 @@ function selectSolver(){
 	stopSolver();
 }
 
+let solverData = "";
 function runSolver(){
-	console.log("TODO: Start the solver.");
 	if(!solverRunning){
 		let problem = document.getElementById('select-problem').value.split('.',1)[0];
 		let solver = document.getElementById('select-solver').value;
@@ -502,16 +507,35 @@ function runSolver(){
 			return;
 		}
 		solverRunning = true;
-		fetch('problem/'+problem+'/solve/'+solver)
+		setTimeout(fetchStatus(), 1000);
+		fetch('/problem/'+problem+'/solve/'+solver)
 			.then(response => response.json())
 			.then(data => {
-				console.log(data);
-				solutionData = {'vertices': data.vertices};
-				document.getElementById('solution-data').value = data.output;
+				console.log("Solve complete:", data);
+				solverData = data;
+				lines = solverData.output.trim().split("\n");
+				document.getElementById('solution-data').value = lines[lines.length-1];
 				solverRunning = false;
 				redraw();
-			});
+		});
 	}
+}
+
+function fetchStatus(){
+	console.log("Fetching status...");
+	fetch('/queue/pop')
+		.then(response => response.json())
+		.then(data => {
+			if(data.done===false){
+				if(data.line){
+					document.getElementById('solution-data').value = data.line;
+					redraw();
+				}
+				fetchStatus();
+			}else if(solverRunning){
+				setTimeout(fetchStatus, 1000);
+			}
+		});
 }
 
 function stopSolver(){
