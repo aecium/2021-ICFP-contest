@@ -1,5 +1,4 @@
 use crate::solvers::solver_utils::RandRound;
-use std::thread;
 
 use rand::prelude::*;
 
@@ -14,7 +13,7 @@ impl Basic {
         let mut solution = Solution {
             vertices: problem.figure.vertices.clone()
         };
-        const MAX_ITERATIONS: usize = 1_000_000_000;
+        const MAX_ITERATIONS: usize = 50_000;
         for _i in 0..MAX_ITERATIONS {
             let result = solution.check(&problem);
             if result.is_valid() {
@@ -86,7 +85,6 @@ impl Basic {
                     solution.vertices[problem.figure.edges[invalid_edge][0]] = p1_new;
                     solution.vertices[problem.figure.edges[invalid_edge][1]] = p2_new;
                 }
-                println!("{}", serde_json::to_string(&solution).unwrap());
             }
         }
         return None;
