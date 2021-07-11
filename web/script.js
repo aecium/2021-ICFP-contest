@@ -487,12 +487,21 @@ function populateFileList(files, id, prefix){
 	}
 }
 
+let solverRunning = false;
 function selectSolver(){
-
+	stopSolver();
 }
 
 function runSolver(){
-	
+	if(!solverRunning){
+		console.log("TODO: Start the solver.");
+	}
+}
+
+function stopSolver(){
+	if(solverRunning){
+		console.log("TODO: Stop the solver.");
+	}
 }
 
 
