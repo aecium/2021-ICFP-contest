@@ -13,8 +13,8 @@ fn sandwich() -> &'static str {
 
 #[get("/problem/<id>/solve/<solver>")]
 fn solve(id: usize, solver: &str) -> Value {
-    let output = Command::new("/bin/ls")
-                        .arg("-l")
+    let output = Command::new("/bin/cat")
+                        .arg(format!("../solutions/{}.json", id))
                         .output()
                         .expect("failed to execute process");
 
@@ -24,7 +24,7 @@ fn solve(id: usize, solver: &str) -> Value {
 
     assert!(output.status.success());
 
-    json!({"id": id, "solver": solver, "output": output.stdout})
+    json!({"id": id, "solver": solver, "output": String::from_utf8(output.stdout).unwrap()})
 }
 
 #[get("/taco")]

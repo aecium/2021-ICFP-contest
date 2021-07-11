@@ -1,4 +1,7 @@
-body { font-family: monospace; }
+body { 
+	font-family: monospace;
+	background-color: #b0b8c8;
+}
 textarea { width: 100%; }
 .error li {
 	background-color: #a00;
