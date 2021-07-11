@@ -34,7 +34,15 @@ fn main() {
             
             match solver {
                 &opt::Solver::Basic => {
-                    Basic::new().solve(&p);
+                    let result = Basic::new().solve(&p);
+                    match result {
+                        Some(solution) => {
+                            println!("Solution Found!\n {} ", serde_json::to_string(&solution).unwrap());
+                        },
+                        None => {
+                            println!("Giving up...");
+                        }
+                    }
                 }
             }
         }

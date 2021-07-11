@@ -33,9 +33,10 @@ pub fn is_point_on_shape(p: &Point, shape: &Vec<Point>) -> bool {
         if ((p[0]*(p1.1-p2.1))+(p1.0*(p2.1-p[1]))+(p2.0*(p[1]-p1.1))) == 0 {
             //the points are colinear!
             if ((p[0] >= p1.0 && p[0] <= p2.0) ||
-                (p[0] >= p2.0 && p[0] <= p1.0)) && 
-               ((p[1] >= p1.0 && p[1] <= p2.1) ||
-                (p[1] >= p2.0 && p[1] <= p1.1)) {
+                (p[0] >= p2.0 && p[0] <= p1.0)) &&
+
+               ((p[1] >= p1.1 && p[1] <= p2.1) ||
+                (p[1] >= p2.1 && p[1] <= p1.1)) {
                 return true;
             }
         }

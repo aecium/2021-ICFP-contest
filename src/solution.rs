@@ -57,14 +57,14 @@ impl Solution {
             let p2 = &problem.figure.vertices[edge[1]];
             let p1_prime = &self.vertices[edge[0]];
             let p2_prime = &self.vertices[edge[1]];
-            let numerator = ((p2_prime[0]-p1_prime[0]).pow(2)+(p2_prime[1]-p1_prime[1]).pow(2)) as f64;
-            let denominator = ((p2[0]-p1[0]).pow(2)+(p2[1]-p1[1]).pow(2)) as f64;
-            let error = ((numerator/denominator) - 1.0) * 1_000_000.0;
-            if error.abs() > problem.epsilon as f64 {
+            let numerator = (p2_prime[0]-p1_prime[0]).pow(2)+(p2_prime[1]-p1_prime[1]).pow(2);
+            let denominator = (p2[0]-p1[0]).pow(2)+(p2[1]-p1[1]).pow(2);
+            let error = (((numerator as f64/denominator as f64) - 1.0) * 1_000_000.0) as i128;
+            if error.abs() as u128 > problem.epsilon {
                 result.is_valid = false;
                 result.invalid_edges_stretched.push(StretchedEdge {
                     index: i,
-                    error: error
+                    error: 0.0
                 });
             }
         }
@@ -319,7 +319,6 @@ mod tests {
             ]
         };
         let result = s1.check(&p);
-        dbg!(&result);
         assert!(!&result.is_valid());
     }
     #[test]
@@ -347,7 +346,6 @@ mod tests {
             ]
         };
         let result = s1.check(&p);
-        dbg!(&result);
         assert!(!&result.is_valid());
     }
 }
