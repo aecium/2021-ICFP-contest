@@ -11,7 +11,7 @@ mod opt;
 use opt::Opt;
 
 mod solvers;
-use solvers::Basic;
+use solvers::{Basic,Border};
 
 mod cats;
 use cats::{ Cat, SteppyCat };
@@ -53,6 +53,17 @@ fn main() {
                 &opt::Solver::SteppyCat => {
                     SteppyCat::new().solve(&p, problem_file);
                 }
+                &opt::Solver::Border => {
+                    let result = Border::new().solve(&p);
+                    match result {
+                        Some(solution) => {
+                            println!("Solution Found!\n {} ", serde_json::to_string(&solution).unwrap());
+                        },
+                        None => {
+                            println!("Giving up...");
+                        }
+                    }
+                },
             }
         },
         Opt::AutoSolve {problem_dir, solution_dir, solver}=> {
@@ -86,6 +97,21 @@ fn main() {
                         println!("Cats can't autosolve.");
                         break;
                     }
+                    &opt::Solver::Border => {
+                        let solution_path = format!("{}{}{}",solution_dir, i, ".json");
+                        if !std::path::Path::new(&solution_path).exists() {
+                            let result = Border::new().solve(&p);
+                            match result {
+                                Some(solution) => {
+                                    println!("Solution Found! for problem {}", i);
+                                    File::create(solution_path).unwrap().write_all(serde_json::to_string(&solution).unwrap().as_bytes()).unwrap();
+                                },
+                                None => {
+                                    println!("Giving up on problem {} ...", i);
+                                }
+                            }
+                        }
+                    },
                 }
             }
         }

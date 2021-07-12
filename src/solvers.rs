@@ -148,6 +148,88 @@ impl Basic {
     }
 }
 
+pub struct Border;
+impl Border {
+    pub fn new() -> Self {Self}
+    pub fn solve(&self, problem: &Problem) -> Option<Solution> {
+        if problem.figure.vertices.len() > 10 || problem.hole.len() > 10 {
+            //Too much work!
+            return None
+        } else {
+            let options: Vec<(i128,i128)> = problem.hole.clone().iter().map(|i| (i[0],i[1])).collect();
+            let solve_iterator = BorderIterator::new(problem.figure.vertices.len(), options.as_slice());
+            for solution_verts in solve_iterator {
+                //dbg!(&solution_verts);
+                let solution_verticies = solution_verts.iter().map(|v| vec![v.0,v.1]).collect();
+                let solution = Solution {
+                    vertices: solution_verticies
+                };
+                if solution.check(&problem).is_valid() {
+                    return Some(solution);
+                }
+            };
+            return None;
+        }
+    }
+}
+#[derive(Debug)]
+struct BorderIterator<'src> {
+    len: usize,
+    options: &'src[(i128,i128)],
+    my_index : usize,
+    child: Option<Box<BorderIterator<'src>>>
+}
+
+
+impl BorderIterator<'_> {
+    fn new(len: usize,options: &'_[(i128,i128)]) -> BorderIterator {
+        let child = if len == 0 {
+            None
+        } else {
+            Some(Box::new(BorderIterator::new(len-1,options)))
+        };
+        BorderIterator {
+            len,
+            options,
+            my_index: 0,
+            child
+        }
+    }
+}
+
+impl Iterator for BorderIterator<'_> {
+    type Item = Vec<(i128,i128)>;
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.len == 0 {
+            None
+        } else if self.len == 1 {
+            if self.my_index == self.options.len() {
+                return None
+            }
+            let mut result = Vec::new();
+            result.push(self.options[self.my_index]);
+            self.my_index += 1;
+            Some(result)
+        } else {
+            let next = &self.child.as_mut().unwrap().next();
+            match next.clone() {
+                Some(mut child_vec) => {
+                    child_vec.push(self.options[self.my_index]);
+                    return Some(child_vec);
+                },
+                None => {
+                    self.my_index += 1;
+                    if self.my_index == self.options.len() {
+                        return None;
+                    } else {
+                        self.child = Some(Box::new(BorderIterator::new(self.len-1,self.options)));
+                        return self.next();
+                    }
+                }
+            }
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
