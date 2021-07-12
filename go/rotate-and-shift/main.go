@@ -38,7 +38,7 @@ type TestResults struct {
 }
 
 var rotation = 1
-var iteration_max = 200
+var iteration_max int
 var interactive = false
 var verbose bool
 
@@ -48,6 +48,7 @@ func main() {
 
 	flag.IntVar(&problem_id, "p", -1, "problem id to solve.")
 	flag.BoolVar(&verbose, "v", false, "mora output!")
+	flag.IntVar(&iteration_max, "i", 200, "set the number of iterations")
 
 	flag.Parse()
 
