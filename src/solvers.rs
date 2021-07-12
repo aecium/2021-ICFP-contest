@@ -156,7 +156,7 @@ impl Border {
             //Too much work!
             return None
         } else {
-            let options: Vec<(i128,i128)> = problem.hole.clone().iter().map(|i| (i[0],i[1])).collect();
+            let options: Vec<(isize,isize)> = problem.hole.clone().iter().map(|i| (i[0],i[1])).collect();
             let solve_iterator = BorderIterator::new(problem.figure.vertices.len(), options.as_slice());
             for solution_verts in solve_iterator {
                 //dbg!(&solution_verts);
@@ -175,14 +175,14 @@ impl Border {
 #[derive(Debug)]
 struct BorderIterator<'src> {
     len: usize,
-    options: &'src[(i128,i128)],
+    options: &'src[(isize,isize)],
     my_index : usize,
     child: Option<Box<BorderIterator<'src>>>
 }
 
 
 impl BorderIterator<'_> {
-    fn new(len: usize,options: &'_[(i128,i128)]) -> BorderIterator {
+    fn new(len: usize,options: &'_[(isize,isize)]) -> BorderIterator {
         let child = if len == 0 {
             None
         } else {
@@ -198,7 +198,7 @@ impl BorderIterator<'_> {
 }
 
 impl Iterator for BorderIterator<'_> {
-    type Item = Vec<(i128,i128)>;
+    type Item = Vec<(isize,isize)>;
     fn next(&mut self) -> Option<Self::Item> {
         if self.len == 0 {
             None
