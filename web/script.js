@@ -152,6 +152,47 @@ function hilightLine(i){
 	}
 }
 
+function callHilightBoundry(element, i){
+	element.onmouseover = function(e){hilightBoundry(i);};
+}
+
+function hilightBoundry(i){
+	j = i==0 ? problemData.hole.length-1 : i-1;
+	p1 = problemData.hole[i];
+	p2 = problemData.hole[j];
+	
+	let g = document.getElementById('hilight-boundaries');
+	while(g.firstChild) {
+		g.removeChild(g.firstChild);
+	}
+	
+	try {
+		let path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+		path.setAttribute('d', 'M ' + p1[0] + ',' + p1[1] + ' L ' + p2[0] + ',' + p2[1]);
+		g.appendChild(path);
+	} catch(e) {
+		console.error(e);
+	}
+}
+
+function hilightPoint(i, vertex){
+	edge = problemData.figure.edges[i];
+	
+	let g = document.getElementById('hilight-points');
+	while(g.firstChild) {
+		g.removeChild(g.firstChild);
+	}
+	point = solutionData.vertices[edge[vertex]];
+	
+	try {
+		let path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+		path.setAttribute('d', 'M ' + point[0] + ',' + point[1] + ' L ' + point[0] + ',' + point[1]);
+		g.appendChild(path);
+	} catch(e) {
+		console.error(e);
+	}
+}
+
 function updateSolution(id){
 	let input = document.getElementById(id);
 	let i = input.dataset.i;
@@ -168,7 +209,8 @@ function createPointInput(i, vertex, coord, value){
 	let input = document.createElement('input');
 	input.id = name;
 	input.setAttribute('type', 'number');
-	input.onfocus = function(e){hilightLine(i);};
+	input.onfocus = function(e){hilightPoint(i, vertex);};
+	input.onmouseover = function(e){hilightPoint(i, vertex);};
 	input.onchange = function(e){updateSolution(name);};
 	input.dataset.i = i;
 	input.dataset.vertex = vertex;
@@ -285,6 +327,31 @@ function populateEpsilonTable(table, epsilon, edges, oldVertices, vertices, hole
 	updateStatusCell('epsilon-status', epsilonStatus);
 }
 
+function populateHoleTable(table, vertices) {
+	while(table.firstChild) {
+		table.removeChild(table.firstChild);
+	}
+
+	let j = vertices.length - 1;
+	for (var i = 0; i < vertices.length; i++) {
+		let p1 = vertices[i];
+		let p2 = vertices[j];
+		let length = squaredDistance(p1, p2);
+
+		let tr = document.createElement('tr');
+
+		for(const v of [i, length, p1[0], p1[1], p2[0], p2[1]]){
+			let td = document.createElement('td');
+			td.textContent = v;
+			tr.appendChild(td);
+		}
+
+		table.appendChild(tr);
+		callHilightBoundry(tr, i);
+		j = i;
+	}
+}
+
 function updateStatusCell(id, status){
 	let el = document.getElementById(id);
 	if(status){
@@ -352,6 +419,7 @@ function redraw() {
 	setElementPaths(figure, problemData.figure.edges, problemData.figure.vertices);
 
 	populateEpsilonTable(document.getElementById('epsilon-table-body'), problemData.epsilon, problemData.figure.edges, problemData.figure.vertices, solutionData.vertices, problemData.hole);
+	populateHoleTable(document.getElementById('hole-table-body'), problemData.hole);
 }
 
 function loadProblemFile(){
