@@ -425,7 +425,7 @@ function redraw() {
 function loadProblemFile(){
 	let file = document.getElementById('problem-file').files[0];
 	let reader = new FileReader();
-	let solutionName = file.name.replace('.json', '-solution.json');
+	let solutionName = file.name;
 	document.getElementById('solution-save-link').setAttribute('download', solutionName);
 	document.getElementById('solution-save').textContent = 'Save ' + solutionName;
 	reader.onload = function(e) {
