@@ -79,10 +79,6 @@ func main() {
 		this_solution.Vertices = append(this_solution.Vertices, [][]int{{this_problem.Figure.Vertices[i][0], this_problem.Figure.Vertices[i][1]}}...)
 	}
 
-	fmt.Println(find_center(this_solution.Vertices))
-
-	return
-
 	iteration := 0
 
 	// m    m   mm   mm   m mmmmmm        m       mmmm   mmmm  mmmmm
@@ -187,4 +183,8 @@ func find_center(pointCloud [][]int) [2]int {
 	y = y / count
 
 	return [2]int{x, y}
+}
+
+func rotate_it() {
+
 }
