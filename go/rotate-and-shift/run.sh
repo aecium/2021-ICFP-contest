@@ -1,3 +1,3 @@
 #!/bin/bash
 
-(for prob in {1..132}; do go run main.go ${prob} | grep -q "SOLVED" && echo ${prob}>>../solved || rm solutions/${prob}.json;done)
+(for prob in {1..132}; do echo "working on ${prob}";go run main.go -v -p ${prob} | grep -q "SOLVED" || rm solutions/${prob}.json;done)

@@ -3,11 +3,13 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
+	"strconv"
 )
 
 type Problem struct {
@@ -36,26 +38,34 @@ type TestResults struct {
 }
 
 var rotation = 1
-var xOffset = 0
-var yOffset = 1
-var iteration_max = 50
+var iteration_max = 200
 var interactive = false
+var verbose bool
 
 func main() {
 
-	if len(os.Args) < 2 {
+	var problem_id int
+
+	flag.IntVar(&problem_id, "p", -1, "problem id to solve.")
+	flag.BoolVar(&verbose, "v", false, "mora output!")
+
+	flag.Parse()
+
+	if problem_id == -1 {
 		fmt.Println("Missing problem id! \nJust the number please!")
 		os.Exit(1)
 	}
-	problem := os.Args[1]
+	problem := strconv.Itoa(problem_id)
 
 	if _, err := os.Stat("solutions/" + problem + ".json"); os.IsNotExist(err) {
-		// path/to/whatever does not exist
+		//nothing to do here :-)
 	} else {
 		check_solution(problem)
 	}
 
-	fmt.Println("Loading problem: " + problem + ".json")
+	if verbose {
+		fmt.Println("Loading problem: " + problem + ".json")
+	}
 	problem_file, _ := ioutil.ReadFile("../../problems/" + problem + ".json")
 
 	this_problem := Problem{}
@@ -70,35 +80,37 @@ func main() {
 
 	iteration := 0
 
+	// m    m   mm   mm   m mmmmmm        m       mmmm   mmmm  mmmmm
+	// ##  ##   ##   #"m  # #             #      m"  "m m"  "m #   "#
+	// # ## #  #  #  # #m # #mmmmm        #      #    # #    # #mmm#"
+	// # "" #  #mm#  #  # # #             #      #    # #    # #
+	// #    # #    # #   ## #mmmmm        #mmmmm  #mm#   #mm#  #
 	for true {
-
+		iteration++
+		// Shift down 1
 		for i := 0; i < len(this_problem.Figure.Vertices); i++ {
-			this_solution.Vertices[i][0] = this_solution.Vertices[i][0] + xOffset
-			this_solution.Vertices[i][1] = this_solution.Vertices[i][1] + yOffset
+			this_solution.Vertices[i][1] = this_solution.Vertices[i][1] + 1
 		}
 
-		output, _ := json.Marshal(this_solution)
-		fileSolution, err := os.Create("solutions/" + problem + ".json")
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		_, err = fileSolution.WriteString(string(output))
-		if err != nil {
-			log.Fatal(err)
-		}
-		fileSolution.Close()
-
-		fmt.Println("\n", string(output), "\n")
-
-		if iteration >= iteration_max {
-			fmt.Println("No solutions found in ", iteration, " trys for problem ", problem)
-			os.Exit(0)
-		}
+		write_solotion_file(problem, this_solution)
 
 		check_solution(problem)
-		iteration++
 
+		// Shift right
+		for i := 0; i < len(this_problem.Figure.Vertices); i++ {
+			this_solution.Vertices[i][0] = this_solution.Vertices[i][0] + 1
+		}
+
+		write_solotion_file(problem, this_solution)
+
+		check_solution(problem)
+
+		if iteration >= iteration_max {
+			if verbose {
+				fmt.Println("No solutions found in ", iteration, " trys for problem ", problem)
+			}
+			os.Exit(0)
+		}
 	}
 
 }
@@ -109,7 +121,24 @@ func wait_for_key() {
 	fmt.Scanln()
 }
 
+func write_solotion_file(problem string, this_solution Solution) {
+	output, _ := json.Marshal(this_solution)
+	fileSolution, err := os.Create("solutions/" + problem + ".json")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_, err = fileSolution.WriteString(string(output))
+	if err != nil {
+		log.Fatal(err)
+	}
+	fileSolution.Close()
+
+	fmt.Println(string(output))
+}
+
 func check_solution(problem string) {
+
 	cmd := exec.Command("../../target/debug/icfp_2021", "check", "../../problems/"+problem+".json", "solutions/"+problem+".json")
 	var outb, errb bytes.Buffer
 	cmd.Stdout = &outb
@@ -124,10 +153,14 @@ func check_solution(problem string) {
 	_ = json.Unmarshal([]byte(outb.Bytes()), &this_testResults)
 
 	if this_testResults.IsValid {
-		fmt.Println("SOLVED!")
+		if verbose {
+			fmt.Println("SOLVED!")
+		}
 		os.Exit(0)
 	} else {
-		fmt.Println(this_testResults)
+		if verbose {
+			fmt.Println(this_testResults)
+		}
 	}
 
 	if interactive {

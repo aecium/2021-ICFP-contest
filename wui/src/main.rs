@@ -70,12 +70,24 @@ fn sandwich() -> &'static str {
 
 #[get("/problem/<id>/solve/<solver>")]
 fn solve(id: usize, solver: &str, tx: &State<Tx>) -> Result<Value, Error> {
-    let child = Command::new("../target/release/icfp_2021")
-                        .arg("solve")
-                        .arg(format!("../problems/{}.json", id))
-                        .arg(solver)
-                        .stdout(Stdio::piped())
-                        .spawn()?;
+    let child;
+    if solver == "rotate-and-shift" {
+        child = Command::new("/usr/bin/go")
+        .arg("run")
+        .arg("main.go")
+        .arg("-p")
+        .arg(format!("{}",id))
+        .current_dir("/mnt/e/workspace/2021-ICFP-contest/go/rotate-and-shift")
+        .stdout(Stdio::piped())
+        .spawn()?;
+    }else {
+        child = Command::new("../target/release/icfp_2021")
+                    .arg("solve")
+                    .arg(format!("../problems/{}.json", id))
+                    .arg(solver)
+                    .stdout(Stdio::piped())
+                    .spawn()?;
+    }
 
     let stdout = child.stdout.ok_or_else(|| Error::new(ErrorKind::Other,"Could not capture standard output."))?;
     let reader = BufReader::new(stdout);
