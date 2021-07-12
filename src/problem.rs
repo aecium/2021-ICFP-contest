@@ -14,5 +14,5 @@ pub struct Figure {
     pub vertices: Vec<Point>
 }
 
-pub type Point = Vec<i128>;
+pub type Point = Vec<isize>;
 pub type Edge = Vec<usize>;

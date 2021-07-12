@@ -79,8 +79,8 @@ impl Basic {
                     let p1_x_new = p1.0 as f64+ (uv12.0 * delta * -1.0);
                     let p1_y_new = p1.1 as f64+ (uv12.1 * delta * -1.0);
 
-                    let p2_new = vec![p2_x_new.rand_round() as i128,p2_y_new.rand_round() as i128];
-                    let p1_new = vec![p1_x_new.rand_round() as i128,p1_y_new.rand_round() as i128];
+                    let p2_new = vec![p2_x_new.rand_round() as isize,p2_y_new.rand_round() as isize];
+                    let p1_new = vec![p1_x_new.rand_round() as isize,p1_y_new.rand_round() as isize];
 
                     solution.vertices[problem.figure.edges[invalid_edge][0]] = p1_new;
                     solution.vertices[problem.figure.edges[invalid_edge][1]] = p2_new;
@@ -89,7 +89,7 @@ impl Basic {
         }
         return None;
     }
-    fn find_new_vertex_location(p_vec: &Vec<i128>, hole: &Vec<Point>) -> (i128, i128) {
+    fn find_new_vertex_location(p_vec: &Vec<isize>, hole: &Vec<Point>) -> (isize, isize) {
         let p = (p_vec[0],p_vec[1]);
         let mut closest_edge = None;
         for i in 0..hole.len() {
@@ -131,7 +131,7 @@ impl Basic {
            ((p_new.1 <= p1.1 as f64 && p_new.1 >= p2.1 as f64) ||
             (p_new.1 <= p2.1 as f64 && p_new.1 >= p1.1 as f64)) {
                 //it's between, just round and return
-                return (p_new.0.rand_round() as i128, p_new.1.rand_round() as i128);
+                return (p_new.0.rand_round() as isize, p_new.1.rand_round() as isize);
             } else {
                 //uh oh, we need to saturate to one of the points.
                 let l_p1 = ((v1.0.pow(2)+v1.1.pow(2))as f64).sqrt();

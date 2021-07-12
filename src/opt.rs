@@ -27,5 +27,6 @@ arg_enum! {
         Cat,
         SteppyCat,
         Border,
+        Flect,
     }
 }

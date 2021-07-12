@@ -1,11 +1,11 @@
 use std::usize;
 
 use serde::{Serialize, Deserialize};
-use crate::{problem::{Problem, Point}, solution::checker_utils::{RotationDirection, determine_rotation, is_point_on_shape}};
+use crate::{problem::{Problem, Point}, solution::checker_utils::{RotationDirection, determine_rotation, is_point_inside_shape}};
 
 use self::checker_utils::{cross_product, vector_from_points};
 
-mod checker_utils;
+pub mod checker_utils;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Solution {
@@ -42,10 +42,9 @@ impl Solution {
             invalid_edges_intersecting: Vec::new()
         };
         //first, are all the vertices inside or on the shape.
-        let rotation_direction = determine_rotation(&problem.hole);
         for i in  0..self.vertices.len() {
             let p = &self.vertices[i];
-            if !Self::is_point_inside_shape(&p, &problem.hole, rotation_direction) {
+            if !is_point_inside_shape(&p, &problem.hole) {
                 result.is_valid = false;
                 result.invalid_vertices.push(i);
             }
@@ -59,7 +58,7 @@ impl Solution {
             let p2_prime = &self.vertices[edge[1]];
             let numerator = (p2_prime[0]-p1_prime[0]).pow(2)+(p2_prime[1]-p1_prime[1]).pow(2);
             let denominator = (p2[0]-p1[0]).pow(2)+(p2[1]-p1[1]).pow(2);
-            let error = (((numerator as f64/denominator as f64) - 1.0) * 1_000_000.0) as i128;
+            let error = (((numerator as f64/denominator as f64) - 1.0) * 1_000_000.0) as isize;
             if error.abs() as u128 > problem.epsilon {
                 result.is_valid = false;
                 result.invalid_edges_stretched.push(StretchedEdge {
@@ -90,48 +89,6 @@ impl Solution {
             }
         }
         result
-    }
-
-    fn is_point_inside_shape(p: &Vec<i128>, shape: &Vec<Vec<i128>>, rotation_direction: RotationDirection) -> bool{
-        //if p is on the border, it's inside, no need to continue further
-        if is_point_on_shape(&p,shape) {
-            return true;
-        }
-        let x = p[0];
-        let y = p[1];
-        let mut crossings = 0;
-        let mut hole = shape.clone();
-        if rotation_direction == RotationDirection::Clockwise {
-            hole.reverse();
-        }
-        for i in 0..hole.len() {
-            //does the current edge cross the y value of the point in question
-            let p1= (hole[i][0], hole[i][1]);
-            let p2 = (hole[((i+1)%hole.len())][0], hole[((i+1)%hole.len())][1]);
-            let m: f64 = ((p2.1-p1.1) as f64)/((p2.0-p1.0) as f64);
-            if m == 0.0 {
-                //horizontal lines aren't helpful, they only matter if the point is on the line, which is already checked
-                continue;
-            }
-            // interesting line
-            if (p1.1 <= y && p2.1 >= y) || (p1.1 >= y && p2.1 <= y) {
-                //find the x value of the intersection with this line and the horizontal ray from the point
-                let ray_x = (((y - p1.1) as f64)/(m as f64)) + p1.0 as f64;
-                if ray_x < x as f64{
-                    //deal with edge cases regarding lines at exactly the vertical height of a hole vertex
-                    let found_point = (ray_x as i128, y);
-                    if (found_point.0 == p1.0 && found_point.1 == p1.1) ||
-                       (found_point.0 == p2.0 && found_point.1 == p2.1) {
-                           if p1.1 > y || p2.1 > y {
-                               continue;
-                           }
-                        }
-                    crossings += 1;
-                }
-            }
-            else { continue; }
-        }
-    return (crossings % 2) == 1;
     }
 }
 

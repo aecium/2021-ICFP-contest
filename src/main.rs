@@ -10,11 +10,15 @@ mod solution;
 mod opt;
 use opt::Opt;
 
+
 mod solvers;
 use solvers::{Basic,Border};
 
 mod cats;
 use cats::{ Cat, SteppyCat };
+
+mod flect;
+use flect::{ Flect };
 
 fn main() {
     let matches = Opt::from_args();
@@ -47,9 +51,12 @@ fn main() {
                         }
                     }
                 },
+                &opt::Solver::Flect => {
+                    Flect::new().solve(&p, problem_file);
+                },
                 &opt::Solver::Cat => {
                     Cat::new().solve(&p, problem_file);
-                }
+                },
                 &opt::Solver::SteppyCat => {
                     SteppyCat::new().solve(&p, problem_file);
                 }
@@ -89,10 +96,14 @@ fn main() {
                             }
                         }
                     },
+                    &opt::Solver::Flect => {
+                        println!("Flect doesn't autosolve (yet).");
+                        break;
+                    },
                     &opt::Solver::Cat => {
                         println!("Cats can't autosolve.");
                         break;
-                    }
+                    },
                     &opt::Solver::SteppyCat => {
                         println!("Cats can't autosolve.");
                         break;
